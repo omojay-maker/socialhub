@@ -20,7 +20,9 @@ class SocialAccountModel {
     }
 
     public static function platforms(): array {
-        return db()->query("SELECT * FROM social_platforms WHERE is_active=1 ORDER BY id")->fetchAll();
+        $rows = db()->query("SELECT * FROM social_platforms WHERE is_active=TRUE ORDER BY id")->fetchAll();
+        foreach ($rows as &$r) $r['is_active'] = db_bool($r['is_active'] ?? 1);
+        return $rows;
     }
 
     public static function find(int $id): ?array {

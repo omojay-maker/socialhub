@@ -6,11 +6,11 @@
 # frontend rebuild is needed. The committed public/dist bundle is served as-is.
 FROM php:8.4-apache
 
-# PHP extensions the app needs (pdo_mysql, mbstring, curl, gd, fileinfo).
+# PHP extensions the app needs (pdo_mysql, pdo_pgsql, mbstring, curl, gd, fileinfo).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpng-dev libjpeg-dev libfreetype6-dev \
+    && apt-get install -y --no-install-recommends libpng-dev libjpeg-dev libfreetype6-dev libpq-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" pdo_mysql mbstring gd \
+    && docker-php-ext-install -j"$(nproc)" pdo_mysql pdo_pgsql mbstring gd \
     && docker-php-ext-enable opcache \
     && a2enmod rewrite headers \
     && rm -rf /var/lib/apt/lists/*

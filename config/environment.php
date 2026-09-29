@@ -55,7 +55,15 @@ function env_put(string $key, string $value): void {
 
 function env_get(string $key, $default = null) {
     $v = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
-    return ($v === false || $v === null || $v === '') ? $default : $v;
+    if ($v === false || $v === null || $v === '') {
+        // An empty line in .env / secrets must not shadow a value injected
+        // later (putenv in tests, late container env). Real env present at
+        // ingest time already won there via env_put, so this only falls
+        // through to the live process environment.
+        $g = getenv($key);
+        return ($g === false || $g === null || $g === '') ? $default : $g;
+    }
+    return $v;
 }
 
 function env_bool(string $key, bool $default = false): bool {

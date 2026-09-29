@@ -1,10 +1,14 @@
 # Render Blueprint for 1TechLink Social Hub.
 # Deploy: Render Dashboard → New → Blueprint → select the `socialhub` repo.
 #
-# The database is an external MySQL (e.g. Aiven free tier) because Render has
-# no managed MySQL. Fill the DB_* values (sync: false) in the Render
-# dashboard at deploy time. APP_URL defaults to the Render public URL via
-# deploy/docker-entrypoint.sh; override it only for a custom domain.
+# The database below is a managed Render Postgres (free tier: 1 GB, expires
+# 30 days after creation — upgrade to Basic to keep it permanently). The web
+# and cron services receive its DATABASE_URL automatically via fromDatabase,
+# which the app prefers over the individual DB_* settings.
+databases:
+  - name: socialhub-db
+    plan: free
+
 services:
   - type: web
     name: socialhub
@@ -23,16 +27,10 @@ services:
         generateValue: true
       - key: SESSION_SECURE
         value: auto
-      - key: DB_HOST
-        sync: false
-      - key: DB_PORT
-        value: 3306
-      - key: DB_DATABASE
-        value: social_hub
-      - key: DB_USERNAME
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: socialhub-db
+          property: connectionString
       # OAuth credentials — paste from each developer portal when going live.
       # Instagram (or Meta app): INSTAGRAM_CLIENT_ID / INSTAGRAM_CLIENT_SECRET
       # LinkedIn: LINKEDIN_CLIENT_ID / LINKEDIN_CLIENT_SECRET
@@ -73,13 +71,7 @@ services:
         value: mock
       - key: APP_KEY
         sync: false
-      - key: DB_HOST
-        sync: false
-      - key: DB_PORT
-        value: 3306
-      - key: DB_DATABASE
-        value: social_hub
-      - key: DB_USERNAME
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: socialhub-db
+          property: connectionString

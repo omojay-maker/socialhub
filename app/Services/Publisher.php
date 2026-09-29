@@ -160,10 +160,11 @@ class Publisher {
 
     private static function acquireLock(int $postId, bool $force): bool {
         $token = bin2hex(random_bytes(16));
+        $staleAfter = date('Y-m-d H:i:s', time() - self::LOCK_TIMEOUT);
         $sql = "UPDATE posts SET publish_locked_at=NOW(), publish_token=?
-                 WHERE id=? AND (publish_locked_at IS NULL OR publish_locked_at < DATE_SUB(NOW(), INTERVAL ? SECOND))";
+                 WHERE id=? AND (publish_locked_at IS NULL OR publish_locked_at < ?)";
         $stmt = db()->prepare($sql);
-        $stmt->execute([$token, $postId, self::LOCK_TIMEOUT]);
+        $stmt->execute([$token, $postId, $staleAfter]);
         return $stmt->rowCount() === 1;
     }
 

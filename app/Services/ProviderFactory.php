@@ -55,7 +55,7 @@ class ProviderFactory {
 
     /** @return array<string,SocialMediaProvider> */
     public static function all(bool $preferMock = false): array {
-        $slugs = db()->query("SELECT slug FROM social_platforms WHERE is_active=1")->fetchAll(PDO::FETCH_COLUMN);
+        $slugs = db()->query("SELECT slug FROM social_platforms WHERE is_active=TRUE")->fetchAll(PDO::FETCH_COLUMN);
         $out = [];
         foreach ($slugs as $slug) $out[$slug] = self::make((string)$slug, $preferMock);
         return $out;

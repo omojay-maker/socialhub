@@ -1,7 +1,8 @@
 <?php
 /**
- * Fixed-window rate limiter backed by MySQL so it survives across workers.
- * Used for login attempts and outbound platform calls.
+ * Fixed-window rate limiter backed by the database so it survives workers.
+ * Used for login attempts and outbound platform calls. Portable across
+ * MySQL and PostgreSQL (plain SELECT/INSERT/UPDATE, no upsert dialect).
  */
 class Throttle {
     /** @return bool true when the attempt is allowed */
@@ -10,21 +11,21 @@ class Throttle {
         $now = time();
         try {
             $pdo = db();
-            $pdo->prepare("INSERT INTO rate_limits (rate_key, hits, window_start) VALUES (?,1,?)
-                            ON DUPLICATE KEY UPDATE
-                              hits = IF(window_start <= ?, hits + 1, 1),
-                              window_start = IF(window_start <= ?, ?, window_start)")
-                ->execute([$key, $now, $now - $windowSeconds, $now - $windowSeconds, $now]);
-
             $stmt = $pdo->prepare("SELECT hits, window_start FROM rate_limits WHERE rate_key=?");
             $stmt->execute([$key]);
             $row = $stmt->fetch();
-            if (!$row) return true;
 
-            if ((int)$row['window_start'] + $windowSeconds < $now) {
-                return true; // window already expired
+            if (!$row || (int)$row['window_start'] <= $now - $windowSeconds) {
+                // New window. DELETE+INSERT keeps this portable (no ON DUPLICATE
+                // KEY / ON CONFLICT dialect); the limiter fails open anyway.
+                $pdo->prepare("DELETE FROM rate_limits WHERE rate_key=?")->execute([$key]);
+                $pdo->prepare("INSERT INTO rate_limits (rate_key, hits, window_start) VALUES (?,?,?)")
+                    ->execute([$key, 1, $now]);
+                return true;
             }
-            return (int)$row['hits'] <= $limit;
+
+            $pdo->prepare("UPDATE rate_limits SET hits = hits + 1 WHERE rate_key=?")->execute([$key]);
+            return (int)$row['hits'] + 1 <= $limit;
         } catch (Throwable $e) {
             Logger::error('throttle failure', ['error' => $e->getMessage()]);
             return true; // fail open, never lock users out because of the limiter

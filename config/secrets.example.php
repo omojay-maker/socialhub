@@ -34,11 +34,15 @@ return [
     // 'mock' keeps the demo providers, 'live' uses the real platform APIs.
     'SOCIAL_MODE'          => 'mock',
 
+    'DB_DRIVER'            => 'pgsql',  // pgsql (Render Postgres, default) or mysql
     'DB_HOST'              => '127.0.0.1',
-    'DB_PORT'              => '3306',
+    'DB_PORT'              => '5432',
     'DB_DATABASE'          => 'social_hub',
     'DB_USERNAME'          => 'social_hub_app',
     'DB_PASSWORD'          => '',
+    // Alternative to the DB_* block above: a single connection URL. Render
+    // Postgres injects DATABASE_URL automatically and the app prefers it.
+    // 'DATABASE_URL'         => 'postgres://user:pass@host:5432/social_hub',
 
     'SESSION_TIMEOUT'      => '1800',
     'SESSION_SECURE'       => 'auto',   // auto = secure cookies only when the request is HTTPS

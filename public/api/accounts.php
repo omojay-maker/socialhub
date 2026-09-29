@@ -63,7 +63,7 @@ if ($action === 'create' && $method === 'POST') {
         echo json_encode(['success'=>false,'message'=>'All fields are required']);
         exit;
     }
-    $platform = db()->prepare("SELECT slug FROM social_platforms WHERE id=? AND is_active=1");
+    $platform = db()->prepare("SELECT slug FROM social_platforms WHERE id=? AND is_active=TRUE");
     $platform->execute([$pid]);
     $slug = (string)($platform->fetchColumn() ?: '');
     if ($slug === '') { echo json_encode(['success'=>false,'message'=>'Unknown platform']); exit; }

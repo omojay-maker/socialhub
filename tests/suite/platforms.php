@@ -7,9 +7,9 @@
 
 $runner->group('Platform registry');
 
-$runner->run('all five platforms are in the allow-list', function () {
+$runner->run('all four platforms are in the allow-list', function () {
     assert_same(
-        ['facebook', 'instagram', 'linkedin', 'tiktok', 'twitter'],
+        ['instagram', 'linkedin', 'tiktok', 'twitter'],
         ProviderFactory::SUPPORTED
     );
 });

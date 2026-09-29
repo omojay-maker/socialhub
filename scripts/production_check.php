@@ -114,8 +114,11 @@ if (ProviderFactory::liveMode()) {
 head('Database');
 try {
     $pdo = db();
-    ok('connected as ' . $pdo->query('SELECT CURRENT_USER()')->fetchColumn());
-    $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
+    $who = db_is_pgsql() ? 'SELECT current_user' : 'SELECT CURRENT_USER()';
+    ok('connected as ' . $pdo->query($who)->fetchColumn());
+    $tables = db_is_pgsql()
+        ? $pdo->query("SELECT tablename FROM pg_tables WHERE schemaname='public'")->fetchAll(PDO::FETCH_COLUMN)
+        : $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
     ok(count($tables) . ' tables present');
     $migrated = $pdo->query("SELECT COUNT(*) FROM schema_migrations")->fetchColumn();
     $files = glob($root . '/database/migrations/*.sql') ?: [];

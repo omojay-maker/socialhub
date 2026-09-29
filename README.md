@@ -2,7 +2,7 @@
 
 Centralized social media management platform for 1TechLink - lightweight Buffer/Hootsuite/Meta Business Suite clone.
 
-**Stack:** PHP 8.4 (PDO, API-only backend) + Vue 3 + Vite + Pinia + Vue Router (pure Vue frontend) + MySQL + Chart.js + Apache
+**Stack:** PHP 8.4 (PDO, API-only backend) + Vue 3 + Vite + Pinia + Vue Router (pure Vue frontend) + PostgreSQL + Chart.js + Apache
 
 This version uses **purely Vue for the frontend** (Vue 3 SFC + Vite) and **core PHP for the backend** (JSON APIs). No PHP server-rendered views; all UI is Vue SPA calling PHP JSON endpoints.
 
@@ -51,10 +51,11 @@ views/ legacy PHP views (not used by Vue, kept for reference)
 
 ## Installation
 ```bash
-# 1. DB
-mysql -u root -proot -e "CREATE DATABASE social_hub"
-mysql -u root -proot social_hub < database/schema.sql
-mysql -u root -proot social_hub < database/seed.sql
+# 1. DB (PostgreSQL — local, or Render Postgres via its External URL)
+createdb social_hub
+psql social_hub < database/schema.sql
+php scripts/migrate.php
+psql social_hub < database/seed.sql
 
 # 2. Env
 cp .env.example .env  # configure DB + FACEBOOK_CLIENT_ID etc

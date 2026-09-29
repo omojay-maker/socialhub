@@ -2,13 +2,19 @@
 class UserModel {
     public static function findByEmail(string $email): ?array {
         $stmt=db()->prepare("SELECT * FROM users WHERE email=? LIMIT 1");
-        $stmt->execute([$email]); $r=$stmt->fetch(); return $r?:null;
+        $stmt->execute([$email]); $r=$stmt->fetch(); if(!$r) return null;
+        $r['is_active']=db_bool($r['is_active'] ?? 1); return $r;
     }
     public static function find(int $id): ?array {
         $stmt=db()->prepare("SELECT * FROM users WHERE id=? LIMIT 1");
-        $stmt->execute([$id]); $r=$stmt->fetch(); return $r?:null;
+        $stmt->execute([$id]); $r=$stmt->fetch(); if(!$r) return null;
+        $r['is_active']=db_bool($r['is_active'] ?? 1); return $r;
     }
-    public static function all(): array { return db()->query("SELECT id,name,email,role,is_active,last_login_at,created_at FROM users ORDER BY id DESC")->fetchAll(); }
+    public static function all(): array {
+        $rows = db()->query("SELECT id,name,email,role,is_active,last_login_at,created_at FROM users ORDER BY id DESC")->fetchAll();
+        foreach ($rows as &$r) $r['is_active'] = db_bool($r['is_active'] ?? 1);
+        return $rows;
+    }
     public static function create(array $d): int {
         $stmt=db()->prepare("INSERT INTO users (name,email,password,role) VALUES (?,?,?,?)");
         $stmt->execute([$d['name'],$d['email'],$d['password'],$d['role']]); return (int)db()->lastInsertId();

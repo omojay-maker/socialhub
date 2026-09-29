@@ -11,16 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mysql:
-        image: mysql:8.0
+      postgres:
+        image: postgres:16
         env:
-          MYSQL_DATABASE: social_hub
-          MYSQL_USER: social_hub_app
-          MYSQL_PASSWORD: ci_password
-          MYSQL_ROOT_PASSWORD: root_password
-        ports: ['3306:3306']
+          POSTGRES_DB: social_hub
+          POSTGRES_USER: social_hub_app
+          POSTGRES_PASSWORD: ci_password
+        ports: ['5432:5432']
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot_password"
+          --health-cmd="pg_isready -h 127.0.0.1 -Usocial_hub_app"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -31,7 +30,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_mysql, mbstring, curl, gd, fileinfo
+          extensions: pdo_pgsql, mbstring, curl, gd, fileinfo
           coverage: none
 
       - name: Lint every PHP file
@@ -56,8 +55,6 @@ jobs:
             $s = str_replace("\x27APP_URL\x27              => \x27https://hub.example.com\x27",
                              "\x27APP_URL\x27              => \x27http://127.0.0.1:8080\x27", $s);
             $s = preg_replace("/\x27APP_KEY\x27\s*=> \x27\x27/", "\x27APP_KEY\x27 => \x27" . bin2hex(random_bytes(32)) . "\x27", $s, 1);
-            $s = str_replace("\x27DB_USERNAME\x27          => \x27social_hub_app\x27",
-                             "\x27DB_USERNAME\x27          => \x27social_hub_app\x27", $s);
             $s = str_replace("\x27DB_PASSWORD\x27          => \x27\x27",
                              "\x27DB_PASSWORD\x27          => \x27ci_password\x27", $s);
             file_put_contents($f, $s);
@@ -65,13 +62,13 @@ jobs:
           php -r 'require "config/secrets.php";' && echo "secrets.php generated"
 
       - name: Create the schema
-        run: mysql -h 127.0.0.1 -usocial_hub_app -pci_password social_hub < database/schema.sql
+        run: PGPASSWORD=ci_password psql -h 127.0.0.1 -Usocial_hub_app -d social_hub -f database/schema.sql
 
       - name: Run migrations
         run: php scripts/migrate.php
 
       - name: Load the demo data
-        run: mysql -h 127.0.0.1 -usocial_hub_app -pci_password social_hub < database/seed.sql
+        run: PGPASSWORD=ci_password psql -h 127.0.0.1 -Usocial_hub_app -d social_hub -f database/seed.sql
 
       - name: Install the demo media
         run: php scripts/seed_demo_media.php

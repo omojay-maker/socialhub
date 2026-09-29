@@ -11,20 +11,37 @@
  *
  * MySQL auto-commits DDL, so statements are not wrapped in a transaction.
  * Duplicate-object errors are treated as "already applied", which keeps the
- * migrations replayable after a partial failure.
+ * migrations replayable after a partial failure. Works on MySQL and
+ * PostgreSQL (see MIGRATION_BENIGN_STATES for the Postgres equivalents).
  */
 require_once __DIR__ . '/../config/environment.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../app/Helpers/Logger.php';
 
 const MIGRATION_BENIGN_ERRORS = [
-    1050, // table already exists
-    1051, // unknown table (on drop)
-    1060, // duplicate column name
-    1061, // duplicate key name
-    1062, // duplicate unique key
-    1826, // duplicate foreign key constraint name
+    1050, // table already exists (mysql)
+    1051, // unknown table (on drop, mysql)
+    1060, // duplicate column name (mysql)
+    1061, // duplicate key name (mysql)
+    1062, // duplicate unique key (mysql)
+    1826, // duplicate foreign key constraint name (mysql)
 ];
+
+// Postgres reports these as SQLSTATE (errorInfo[0]).
+const MIGRATION_BENIGN_STATES = [
+    '42P07', // relation already exists
+    '42701', // duplicate column
+    '42710', // duplicate object (index, constraint)
+];
+
+function migration_is_benign(PDOException $e): bool {
+    $code = (int)($e->errorInfo[1] ?? 0);
+    if (in_array($code, MIGRATION_BENIGN_ERRORS, true)) return true;
+    $state = (string)($e->errorInfo[0] ?? $e->getCode());
+    if (in_array($state, MIGRATION_BENIGN_STATES, true)) return true;
+    // Fallback for drivers that only surface the message.
+    return str_contains(strtolower($e->getMessage()), 'already exists');
+}
 
 function migration_statements(string $sql): array {
     // Strip comment lines, then split on semicolons that end a line.
@@ -38,8 +55,14 @@ function migration_statements(string $sql): array {
 $dir  = __DIR__ . '/../database/migrations';
 $mode = $argv[1] ?? 'apply';
 $pdo  = db();
+$isPg = db_is_pgsql();
 
-$pdo->exec("CREATE TABLE IF NOT EXISTS schema_migrations (
+$pdo->exec($isPg
+    ? "CREATE TABLE IF NOT EXISTS schema_migrations (
+  filename   VARCHAR(190) NOT NULL PRIMARY KEY,
+  applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)"
+    : "CREATE TABLE IF NOT EXISTS schema_migrations (
   filename   VARCHAR(190) NOT NULL PRIMARY KEY,
   applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -57,12 +80,19 @@ if (in_array($mode, ['--fresh', 'fresh'], true)) {
         fwrite(STDERR, "Refusing to run --fresh without --i-know-this-is-dev\n");
         exit(1);
     }
-    $pdo->exec("SET FOREIGN_KEY_CHECKS=0");
-    foreach ($pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN) as $table) {
-        $pdo->exec("DROP TABLE IF EXISTS `$table`");
-        echo "dropped   $table\n";
+    if ($isPg) {
+        foreach ($pdo->query("SELECT tablename FROM pg_tables WHERE schemaname='public'")->fetchAll(PDO::FETCH_COLUMN) as $table) {
+            $pdo->exec('DROP TABLE IF EXISTS "' . str_replace('"', '""', $table) . '" CASCADE');
+            echo "dropped   $table\n";
+        }
+    } else {
+        $pdo->exec("SET FOREIGN_KEY_CHECKS=0");
+        foreach ($pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN) as $table) {
+            $pdo->exec("DROP TABLE IF EXISTS `$table`");
+            echo "dropped   $table\n";
+        }
+        $pdo->exec("SET FOREIGN_KEY_CHECKS=1");
     }
-    $pdo->exec("SET FOREIGN_KEY_CHECKS=1");
     $applied = [];
 }
 
@@ -89,8 +119,7 @@ foreach ($files as $file) {
             $pdo->exec($stmt);
             $done++;
         } catch (PDOException $e) {
-            $code = (int)($e->errorInfo[1] ?? 0);
-            if (in_array($code, MIGRATION_BENIGN_ERRORS, true)) {
+            if (migration_is_benign($e)) {
                 $skipped++;
                 continue;
             }
@@ -100,7 +129,10 @@ foreach ($files as $file) {
         }
     }
 
-    $ins = $pdo->prepare("INSERT IGNORE INTO schema_migrations (filename) VALUES (?)");
+    $record = $isPg
+        ? "INSERT INTO schema_migrations (filename) VALUES (?) ON CONFLICT (filename) DO NOTHING"
+        : "INSERT IGNORE INTO schema_migrations (filename) VALUES (?)";
+    $ins = $pdo->prepare($record);
     $ins->execute([$name]);
     printf("applied  %-42s %d statement(s)%s\n", $name, $done, $skipped ? ", $skipped already present" : '');
 }

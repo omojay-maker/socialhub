@@ -31,7 +31,7 @@ env_send_security_headers();
 json_no_store();
 
 function platform_id_for(string $slug): int {
-    $stmt = db()->prepare("SELECT id FROM social_platforms WHERE slug=? AND is_active=1 LIMIT 1");
+    $stmt = db()->prepare("SELECT id FROM social_platforms WHERE slug=? AND is_active=TRUE LIMIT 1");
     $stmt->execute([$slug]);
     return (int)($stmt->fetchColumn() ?: 0);
 }

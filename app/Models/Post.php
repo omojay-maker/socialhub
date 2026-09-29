@@ -35,11 +35,12 @@ class PostModel {
     public static function all(?string $status=null, ?string $search=null, ?string $platform=null, int $limit=50, int $offset=0): array {
         $where=[]; $params=[];
         if($status){ $where[]="p.status=?"; $params[]=$status; }
-        if($search){ $where[]="(p.content LIKE ? OR p.hashtags LIKE ?)"; $params[]="%$search%"; $params[]="%$search%"; }
+        if($search){ $like = sql_like(); $where[]="(p.content $like ? OR p.hashtags $like ?)"; $params[]="%$search%"; $params[]="%$search%"; }
         if($platform){ $where[]="EXISTS(SELECT 1 FROM post_platforms pp JOIN social_platforms sp ON sp.id=pp.platform_id WHERE pp.post_id=p.id AND sp.slug=?)"; $params[]=$platform; }
         $w=$where?"WHERE ".implode(" AND ",$where):"";
+        $agg = sql_group_concat('sp.slug');
         $sql="SELECT p.*, u.name as author_name,
-            (SELECT GROUP_CONCAT(sp.slug) FROM post_platforms pp JOIN social_platforms sp ON sp.id=pp.platform_id WHERE pp.post_id=p.id) as platforms
+            (SELECT $agg FROM post_platforms pp JOIN social_platforms sp ON sp.id=pp.platform_id WHERE pp.post_id=p.id) as platforms
             FROM posts p JOIN users u ON u.id=p.user_id $w ORDER BY p.created_at DESC LIMIT $limit OFFSET $offset";
         $stmt=db()->prepare($sql); $stmt->execute($params); return $stmt->fetchAll();
     }
@@ -70,8 +71,11 @@ class PostModel {
     public static function delete(int $id): void { db()->prepare("DELETE FROM posts WHERE id=?")->execute([$id]); }
     public static function scheduledDue(int $limit = 20): array {
         $limit = max(1, min(100, $limit));
-        return db()->query("SELECT * FROM posts WHERE status='scheduled' AND scheduled_at <= NOW()
-                             AND (publish_locked_at IS NULL OR publish_locked_at < DATE_SUB(NOW(), INTERVAL 300 SECOND))
-                             ORDER BY scheduled_at LIMIT $limit")->fetchAll();
+        $staleAfter = date('Y-m-d H:i:s', time() - 300);
+        $stmt = db()->prepare("SELECT * FROM posts WHERE status='scheduled' AND scheduled_at <= NOW()
+                             AND (publish_locked_at IS NULL OR publish_locked_at < ?)
+                             ORDER BY scheduled_at LIMIT $limit");
+        $stmt->execute([$staleAfter]);
+        return $stmt->fetchAll();
     }
 }
