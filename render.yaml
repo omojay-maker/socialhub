@@ -1,0 +1,85 @@
+# Render Blueprint for 1TechLink Social Hub.
+# Deploy: Render Dashboard → New → Blueprint → select the `socialhub` repo.
+#
+# The database is an external MySQL (e.g. Aiven free tier) because Render has
+# no managed MySQL. Fill the DB_* values (sync: false) in the Render
+# dashboard at deploy time. APP_URL defaults to the Render public URL via
+# deploy/docker-entrypoint.sh; override it only for a custom domain.
+services:
+  - type: web
+    name: socialhub
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /PHP_projects/social-hub/public/api/csrf.php
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: SOCIAL_MODE
+        value: mock
+      - key: APP_KEY
+        generateValue: true
+      - key: SESSION_SECURE
+        value: auto
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 3306
+      - key: DB_DATABASE
+        value: social_hub
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      # OAuth credentials — paste from each developer portal when going live.
+      # Instagram (or Meta app): INSTAGRAM_CLIENT_ID / INSTAGRAM_CLIENT_SECRET
+      # LinkedIn: LINKEDIN_CLIENT_ID / LINKEDIN_CLIENT_SECRET
+      # TikTok: TIKTOK_CLIENT_ID / TIKTOK_CLIENT_SECRET
+      # X: TWITTER_CLIENT_ID / TWITTER_CLIENT_SECRET (+ OAuth 1.0a user tokens
+      #    TWITTER_CONSUMER_KEY/SECRET + TWITTER_ACCESS_TOKEN/SECRET for posting)
+      - key: INSTAGRAM_CLIENT_ID
+        sync: false
+      - key: INSTAGRAM_CLIENT_SECRET
+        sync: false
+      - key: LINKEDIN_CLIENT_ID
+        sync: false
+      - key: LINKEDIN_CLIENT_SECRET
+        sync: false
+      - key: TIKTOK_CLIENT_ID
+        sync: false
+      - key: TIKTOK_CLIENT_SECRET
+        sync: false
+      - key: TWITTER_CLIENT_ID
+        sync: false
+      - key: TWITTER_CLIENT_SECRET
+        sync: false
+
+  # Releases scheduled posts every 5 minutes (same as the local cron line).
+  - type: cron
+    name: socialhub-scheduler
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    schedule: "*/5 * * * *"
+    command: php cron/publish_scheduled_posts.php
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: SOCIAL_MODE
+        value: mock
+      - key: APP_KEY
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 3306
+      - key: DB_DATABASE
+        value: social_hub
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false

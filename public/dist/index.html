@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/PHP_projects/social-hub/public/dist/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f2ff" />
+    <title>1TechLink Social Hub</title>
+    <script>
+      (function () {
+        var t = localStorage.getItem('sh_theme')
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        document.documentElement.setAttribute('data-theme', t)
+        document.querySelector('meta[name="theme-color"]')
+          .setAttribute('content', t === 'dark' ? '#0e0a1c' : '#f4f2ff')
+      })()
+    </script>
+    <script type="module" crossorigin src="/PHP_projects/social-hub/public/dist/assets/index-D7WzPSUD.js"></script>
+    <link rel="stylesheet" crossorigin href="/PHP_projects/social-hub/public/dist/assets/index-DUw5xnuA.css">
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>

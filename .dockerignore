@@ -1,0 +1,14 @@
+# Never bake secrets or local state into the image.
+.git/
+.env
+config/secrets.php
+frontend/node_modules/
+public/dist/.vite/
+storage/uploads/*
+!storage/uploads/.gitkeep
+storage/logs/*
+!storage/logs/.gitkeep
+storage/sessions/*
+!storage/sessions/.gitkeep
+*.swp
+.DS_Store

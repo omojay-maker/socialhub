@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  php:
+    name: PHP lint + tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: social_hub
+          MYSQL_USER: social_hub_app
+          MYSQL_PASSWORD: ci_password
+          MYSQL_ROOT_PASSWORD: root_password
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot_password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mbstring, curl, gd, fileinfo
+          coverage: none
+
+      - name: Lint every PHP file
+        run: |
+          set -euo pipefail
+          fail=0
+          while IFS= read -r file; do
+            if ! out=$(php -l "$file" 2>&1); then
+              echo "$out"
+              fail=1
+            fi
+          done < <(find app config public scripts cron tests -name '*.php')
+          [ "$fail" -eq 0 ] || { echo "PHP lint failed"; exit 1; }
+          echo "PHP lint clean."
+
+      - name: Build a throwaway secrets.php
+        run: |
+          cp config/secrets.example.php config/secrets.php
+          php -r '
+            $f = "config/secrets.php";
+            $s = file_get_contents($f);
+            $s = str_replace("\x27APP_URL\x27              => \x27https://hub.example.com\x27",
+                             "\x27APP_URL\x27              => \x27http://127.0.0.1:8080\x27", $s);
+            $s = preg_replace("/\x27APP_KEY\x27\s*=> \x27\x27/", "\x27APP_KEY\x27 => \x27" . bin2hex(random_bytes(32)) . "\x27", $s, 1);
+            $s = str_replace("\x27DB_USERNAME\x27          => \x27social_hub_app\x27",
+                             "\x27DB_USERNAME\x27          => \x27social_hub_app\x27", $s);
+            $s = str_replace("\x27DB_PASSWORD\x27          => \x27\x27",
+                             "\x27DB_PASSWORD\x27          => \x27ci_password\x27", $s);
+            file_put_contents($f, $s);
+          '
+          php -r 'require "config/secrets.php";' && echo "secrets.php generated"
+
+      - name: Create the schema
+        run: mysql -h 127.0.0.1 -usocial_hub_app -pci_password social_hub < database/schema.sql
+
+      - name: Run migrations
+        run: php scripts/migrate.php
+
+      - name: Load the demo data
+        run: mysql -h 127.0.0.1 -usocial_hub_app -pci_password social_hub < database/seed.sql
+
+      - name: Install the demo media
+        run: php scripts/seed_demo_media.php
+
+      - name: Run the test suite
+        run: php tests/run.php
+
+      - name: Production readiness check
+        # The CI host is plain http with mock providers, so only the structural
+        # checks can pass here; the credential checks are informational.
+        run: php scripts/production_check.php || true
+
+      - name: Assert secrets.php is not committed
+        run: |
+          if git ls-files --error-unmatch config/secrets.php >/dev/null 2>&1; then
+            echo "config/secrets.php is tracked in git; it holds the DB password and APP_KEY."
+            exit 1
+          fi
+          echo "config/secrets.php is untracked, as required."
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Build
+        run: npm run build
+        working-directory: frontend

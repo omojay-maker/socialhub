@@ -1,0 +1,18 @@
+Options -Indexes
+
+# Defense in depth: never serve secrets, source lists or data files.
+# (Primary protection is deploy/apache/socialhub-directory.conf installed via
+#  deploy/enable-webroot-lockdown.sh, which needs root. This .htaccess helps
+#  on hosts where AllowOverride is enabled.)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+<FilesMatch "\.(sql|md|log|ini|bak|dist|example|sample|old|sh|lock|yml|yaml|neon|twig|po|pot)$">
+    Require all denied
+</FilesMatch>
+<Files "package.json">
+    Require all denied
+</Files>
+<Files "package-lock.json">
+    Require all denied
+</Files>

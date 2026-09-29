@@ -1,0 +1,20 @@
+<?php
+require_once __DIR__.'/../../config/environment.php';
+require_once __DIR__.'/../../config/database.php';
+require_once __DIR__.'/../../app/Helpers/Auth.php';
+require_once __DIR__.'/../../app/Helpers/helpers.php';
+require_once __DIR__.'/../../app/Models/SocialAccount.php';
+require_once __DIR__.'/../../app/Models/Post.php';
+require_once __DIR__.'/../../app/Models/Media.php';
+require_once __DIR__.'/../../app/Models/Notification.php';
+require_once __DIR__.'/../../app/Models/Analytics.php';
+require_once __DIR__.'/../../app/Controllers/DashboardController.php';
+define('BASE_URL', env_get('APP_URL','http://localhost/PHP_projects/social-hub'));
+
+env_send_security_headers();
+json_no_store();
+Auth::start();
+header('Content-Type: application/json');
+if (!Auth::check()) { http_response_code(401); echo json_encode(['success'=>false,'message'=>'Unauthorized']); exit; }
+$data = DashboardController::data();
+echo json_encode(['success'=>true] + $data);

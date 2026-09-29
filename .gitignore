@@ -1,0 +1,25 @@
+# Local environment and secrets. config/secrets.php holds the database
+# password and the APP_KEY that encrypts every stored OAuth token, so it must
+# never be committed. Copy config/secrets.example.php and fill it in instead.
+/.env
+/config/secrets.php
+
+# Runtime state. Uploads and logs are per-deployment; the demo images that
+# database/seed.sql references are tracked under database/demo-media/ and
+# installed by scripts/seed_demo_media.php.
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/sessions/*
+!/storage/sessions/.gitkeep
+
+# Build output is committed so the box can be deployed without Node, but the
+# local dev copy is ignored.
+/frontend/node_modules/
+/public/dist/.vite/
+
+.DS_Store
+*.swp
+
+/storage/cron.lock
