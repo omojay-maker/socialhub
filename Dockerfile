@@ -8,7 +8,7 @@ FROM php:8.4-apache
 
 # PHP extensions the app needs (pdo_mysql, pdo_pgsql, mbstring, curl, gd, fileinfo).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpng-dev libjpeg-dev libfreetype6-dev libpq-dev \
+    && apt-get install -y --no-install-recommends libpng-dev libjpeg-dev libfreetype6-dev libpq-dev libonig-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" pdo_mysql pdo_pgsql mbstring gd \
     && docker-php-ext-enable opcache \
