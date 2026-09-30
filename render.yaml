@@ -1,6 +1,12 @@
 # Render Blueprint for 1TechLink Social Hub.
 # Deploy: Render Dashboard → New → Blueprint → select the `socialhub` repo.
 #
+# ONE-TIME DB SETUP (Blueprint cannot run it for you): after the first
+# deploy, open the web service → Shell tab and run:
+#   php scripts/render_init_db.php
+# This creates the schema and loads demo data. Never run it again on a live
+# database — database/schema.sql drops tables.
+#
 # The database below is a managed Render Postgres (free tier: 1 GB, expires
 # 30 days after creation — upgrade to Basic to keep it permanently). The web
 # and cron services receive its DATABASE_URL automatically via fromDatabase,
