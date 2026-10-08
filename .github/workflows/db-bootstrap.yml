@@ -1,0 +1,31 @@
+# One-time database bootstrap for the Render Postgres instance.
+# Manually triggered only: Actions → "Render DB bootstrap" → Run workflow.
+# Requires the RENDER_DATABASE_URL repository secret (Render dashboard →
+# socialhub-db → Connect → External connection string).
+# Safe to re-run only on an EMPTY database: schema.sql drops tables.
+name: Render DB bootstrap
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bootstrap:
+    name: Import schema + seed into Render Postgres
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, mbstring
+          coverage: none
+
+      - name: Bootstrap database
+        env:
+          DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
+          APP_ENV: production
+          APP_URL: https://socialhub-9o29.onrender.com/PHP_projects/social-hub
+          APP_KEY: bootstrap-only-placeholder-key-0123456789abcdef
+          APP_DEBUG: 'true'
+        run: php scripts/render_init_db.php

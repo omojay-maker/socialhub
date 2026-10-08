@@ -37,6 +37,14 @@ services:
         fromDatabase:
           name: socialhub-db
           property: connectionString
+      - key: APP_URL
+        value: https://socialhub.onrender.com
+      - key: PUBLIC_MEDIA_BASE
+        value: https://socialhub.onrender.com
+      - key: TERMS_URL
+        value: https://socialhub.onrender.com/terms.html
+      - key: PRIVACY_URL
+        value: https://socialhub.onrender.com/privacy.html
       # OAuth credentials — paste from each developer portal when going live.
       # Instagram (or Meta app): INSTAGRAM_CLIENT_ID / INSTAGRAM_CLIENT_SECRET
       # LinkedIn: LINKEDIN_CLIENT_ID / LINKEDIN_CLIENT_SECRET
