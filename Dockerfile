@@ -22,6 +22,8 @@ RUN apt-get update \
 RUN printf '<VirtualHost *:80>\n\
     DocumentRoot /var/www/html\n\
     SetEnvIf X-Forwarded-Proto "https" HTTPS=on\n\
+    RewriteEngine On\n\
+    RewriteRule "^/$" "/PHP_projects/social-hub/public/index.php" [L]\n\
     <Directory /var/www/html>\n\
         AllowOverride All\n\
         Require all granted\n\
