@@ -24,7 +24,22 @@ function init_statements(string $sql): array {
 $pdo = db();
 echo 'driver: ' . db_driver() . "\n";
 
-foreach (['database/schema.sql', 'database/seed.sql'] as $rel) {
+// Safety guard: on an already-initialized database (users exist), skip the
+// destructive schema import and only top up idempotent seed data. This makes
+// the script safe to leave wired as a pre-deploy command.
+$initialized = false;
+try {
+    $initialized = (int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn() > 0;
+} catch (Throwable $e) {
+    $initialized = false; // fresh/empty database
+}
+
+$files = $initialized
+    ? ['database/seed.sql']
+    : ['database/schema.sql', 'database/seed.sql'];
+if ($initialized) echo "database already initialized — seed top-up only\n";
+
+foreach ($files as $rel) {
     $path = dirname(__DIR__) . '/' . $rel;
     if (!is_file($path)) {
         fwrite(STDERR, "missing: $rel\n");
