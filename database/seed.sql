@@ -14,13 +14,16 @@
 -- the password "password". Change them before exposing this to anyone.
 
 -- ---------------------------------------------------------------- platforms --
-INSERT INTO social_platforms (id, slug, name, icon, color, is_active) VALUES
-(1, 'facebook',  'Facebook',     'facebook',  '#1877F2', FALSE),
-(2, 'instagram', 'Instagram',    'instagram', '#E4405F', TRUE),
-(3, 'linkedin',  'LinkedIn',     'linkedin',  '#0A66C2', TRUE),
-(4, 'tiktok',    'TikTok',       'tiktok',    '#FE2C55', TRUE),
-(5, 'twitter',   'X',            'twitter',   '#e7e9ea', TRUE)
-ON CONFLICT (id) DO UPDATE SET
+-- Match on slug (not id): migration 005 may already own low ids with the
+-- same slugs, and an id-based upsert would leave those stale slugs behind
+-- to collide with the rows inserted below.
+INSERT INTO social_platforms (slug, name, icon, color, is_active) VALUES
+('facebook',  'Facebook',     'facebook',  '#1877F2', FALSE),
+('instagram', 'Instagram',    'instagram', '#E4405F', TRUE),
+('linkedin',  'LinkedIn',     'linkedin',  '#0A66C2', TRUE),
+('tiktok',    'TikTok',       'tiktok',    '#FE2C55', TRUE),
+('twitter',   'X',            'twitter',   '#e7e9ea', TRUE)
+ON CONFLICT (slug) DO UPDATE SET
   name=EXCLUDED.name, icon=EXCLUDED.icon, color=EXCLUDED.color, is_active=EXCLUDED.is_active;
 
 -- -------------------------------------------------------------------- users --
