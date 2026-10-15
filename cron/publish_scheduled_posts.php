@@ -17,6 +17,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../app/Helpers/Logger.php';
 require_once __DIR__ . '/../app/Helpers/helpers.php';
 require_once __DIR__ . '/../app/Models/Post.php';
+require_once __DIR__ . '/../app/Models/Media.php';
 require_once __DIR__ . '/../app/Models/SocialAccount.php';
 require_once __DIR__ . '/../app/Services/Publisher.php';
 require_once __DIR__ . '/../app/Services/Throttle.php';

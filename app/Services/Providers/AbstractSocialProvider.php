@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/SocialMediaProvider.php';
+require_once __DIR__ . '/../Throttle.php';
 
 /**
  * Shared plumbing for the real providers: credential loading, transparent
