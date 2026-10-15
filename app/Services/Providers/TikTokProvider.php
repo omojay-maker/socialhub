@@ -44,11 +44,13 @@ class TikTokProvider extends AbstractSocialProvider {
         // TikTok's portal rejects redirect URIs with a query string, so this
         // platform uses the static path below (see
         // public/api/oauth-callback/tiktok/index.php) instead of the default
-        // oauth.php?action=callback&platform=... URL.
+        // oauth.php?action=callback&platform=... URL. The trailing slash
+        // avoids Apache's directory-slash redirect (which would downgrade
+        // https to http behind the proxy before re-upgrading).
         $explicit = (string)env_get('TIKTOK_REDIRECT_URI', '');
         if ($explicit !== '') return $explicit;
         return rtrim((string)env_get('APP_URL', base_url_public()), '/')
-            . '/public/api/oauth-callback/tiktok';
+            . '/public/api/oauth-callback/tiktok/';
     }
     private function postMode(): string {
         $mode = strtoupper((string)env_get('TIKTOK_POST_MODE', 'DIRECT_POST'));
