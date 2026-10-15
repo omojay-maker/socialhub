@@ -70,10 +70,21 @@ class SocialAccountModel {
         $external = (string)($d['external_account_id'] ?? '');
         $existing = $external !== '' ? self::findByExternal((int)$d['platform_id'], $external) : null;
 
+        // Some providers (TikTok basic scopes, LinkedIn) return no handle.
+        // username is NOT NULL, so derive one rather than crashing the
+        // whole OAuth callback after a successful authorization.
+        $username = trim((string)($d['username'] ?? ''));
+        if ($username === '') {
+            $base = strtolower((string)($d['account_name'] ?? ''));
+            $base = (string)preg_replace('/[^a-z0-9_.]+/i', '', $base);
+            if ($base === '') $base = 'account';
+            $username = '@' . substr($base, 0, 30);
+        }
+
         $payload = [
             (int)$d['platform_id'],
             $d['account_name'] ?? 'Unknown',
-            $d['username'] ?? null,
+            $username,
             $d['account_type'] ?? 'page',
             $external !== '' ? $external : null,
             $d['external_user_id'] ?? null,
