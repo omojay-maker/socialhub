@@ -97,7 +97,7 @@ class SocialAccountModel {
         $stmt = db()->prepare("INSERT INTO social_accounts
             (platform_id, user_id, account_name, username, account_type, external_account_id,
              external_user_id, avatar_url, followers, meta, connection_status)
-            VALUES (?,?,?,?,?,?,?,?,?,'connected')");
+            VALUES (?,?,?,?,?,?,?,?,?,?,'connected')");
         $stmt->execute([
             $payload[0], $userId, $payload[1], $payload[2], $payload[3],
             $payload[4], $payload[5], $payload[6], $payload[7], $payload[8],
