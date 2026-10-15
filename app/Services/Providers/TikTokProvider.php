@@ -40,7 +40,16 @@ class TikTokProvider extends AbstractSocialProvider {
 
     private function clientId(): string     { return (string)env_get('TIKTOK_CLIENT_ID'); }
     private function clientSecret(): string { return (string)env_get('TIKTOK_CLIENT_SECRET'); }
-    public function redirectUri(): string { return $this->redirectUriFor('TIKTOK_REDIRECT_URI'); }
+    public function redirectUri(): string {
+        // TikTok's portal rejects redirect URIs with a query string, so this
+        // platform uses the static path below (see
+        // public/api/oauth-callback/tiktok/index.php) instead of the default
+        // oauth.php?action=callback&platform=... URL.
+        $explicit = (string)env_get('TIKTOK_REDIRECT_URI', '');
+        if ($explicit !== '') return $explicit;
+        return rtrim((string)env_get('APP_URL', base_url_public()), '/')
+            . '/public/api/oauth-callback/tiktok';
+    }
     private function postMode(): string {
         $mode = strtoupper((string)env_get('TIKTOK_POST_MODE', 'DIRECT_POST'));
         return in_array($mode, ['DIRECT_POST', 'MEDIA_UPLOAD'], true) ? $mode : 'DIRECT_POST';
