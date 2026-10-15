@@ -22,6 +22,7 @@ require_once __DIR__ . '/../../app/Helpers/Csrf.php';
 require_once __DIR__ . '/../../app/Helpers/Logger.php';
 require_once __DIR__ . '/../../app/Helpers/helpers.php';
 require_once __DIR__ . '/../../app/Models/SocialAccount.php';
+require_once __DIR__ . '/../../app/Models/Analytics.php';
 require_once __DIR__ . '/../../app/Services/OAuth.php';
 require_once __DIR__ . '/../../app/Services/ProviderFactory.php';
 
@@ -174,6 +175,34 @@ if ($action === 'callback') {
         // The Page/IG token can expire independently of the user token.
         if (!empty($profile['meta']['expires_in'])) {
             SocialAccountModel::storeToken($accountId, null, null, (int)$profile['meta']['expires_in']);
+        }
+
+        // From here on the platform's own numbers rule: retire this
+        // platform's token-less demo accounts and demo analytics so the
+        // dashboard can no longer mix them in with live data.
+        $platformId = (int)($context['platform_id'] ?? platform_id_for($platform));
+        SocialAccountModel::retireDemoForPlatform($platformId, $accountId);
+
+        // Pull live counters straight away so the new account shows real
+        // numbers immediately instead of waiting for a manual Sync.
+        // Best-effort: the connection itself has already succeeded.
+        try {
+            $info = $provider->getAccountInformation($accountId);
+            if (empty($info['error']) && isset($info['followers'])) {
+                SocialAccountModel::updateStats($accountId, (int)$info['followers'], $info['meta'] ?? null);
+                AnalyticsModel::recordLiveSnapshot(
+                    $platformId,
+                    $accountId,
+                    (int)$info['followers'],
+                    [
+                        'following' => (int)($info['following'] ?? 0),
+                        'posts'     => (int)($info['posts'] ?? 0),
+                    ]
+                );
+            }
+            SocialAccountModel::updateSync($accountId);
+        } catch (Throwable $syncError) {
+            Logger::warn('oauth post-connect sync failed', ['platform' => $platform, 'error' => $syncError->getMessage()]);
         }
 
         activity_log((int)Auth::id(), 'account.connected',

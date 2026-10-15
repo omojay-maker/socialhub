@@ -26,4 +26,20 @@ class AnalyticsModel {
         $stmt->execute($params);
         return $stmt->fetchAll();
     }
+
+    /**
+     * Record today's counters for a live account. Portable UPDATE-first
+     * upsert (no ON CONFLICT / ON DUPLICATE dialect). Engagement starts at
+     * zero and grows as real syncs land — never demo data again.
+     */
+    public static function recordLiveSnapshot(int $platformId, int $accountId, int $followers, array $extra = []): void {
+        $pdo = db();
+        $today = date('Y-m-d');
+        $upd = $pdo->prepare("UPDATE analytics SET followers=? WHERE platform_id=? AND date=?");
+        $upd->execute([$followers, $platformId, $today]);
+        if ($upd->rowCount() === 0) {
+            $pdo->prepare("INSERT INTO analytics (platform_id, account_id, date, followers, follower_growth, likes, comments, shares, reach, impressions, engagement_rate) VALUES (?,?,?,?,0,0,0,0,0,0,0)")
+                ->execute([$platformId, $accountId, $today, $followers]);
+        }
+    }
 }

@@ -189,6 +189,14 @@ class SocialAccountModel {
             ->execute([$followers, $meta ? json_encode($meta) : null, $id]);
     }
 
+    /** Remove token-less demo accounts once the real thing connects. */
+    public static function retireDemoForPlatform(int $platformId, int $exceptId): void {
+        db()->prepare("DELETE FROM social_accounts WHERE platform_id=? AND id<>? AND access_token IS NULL AND refresh_token IS NULL")
+            ->execute([$platformId, $exceptId]);
+        // Their demo analytics would otherwise keep feeding the dashboard.
+        db()->prepare("DELETE FROM analytics WHERE platform_id=?")->execute([$platformId]);
+    }
+
     public static function delete(int $id): void {
         db()->prepare("DELETE FROM social_accounts WHERE id=?")->execute([$id]);
     }

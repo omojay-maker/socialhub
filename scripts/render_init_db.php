@@ -26,7 +26,8 @@ function init_statements(string $sql): array {
 /**
  * Bring an empty database to a working seeded state.
  * Returns ['initialized' => bool, 'ran' => string[]]. Never drops tables on
- * a database that already has users.
+ * a database that already has users. Also applies any pending migrations so
+ * deploys converge without a separate migrate step.
  */
 function render_init_db(): array {
     $pdo = db();
@@ -40,21 +41,61 @@ function render_init_db(): array {
         $hasUsers = false; // fresh/empty database
     }
 
-    $files = $hasUsers ? ['database/seed.sql'] : ['database/schema.sql', 'database/seed.sql'];
     $ran = [];
+    $files = $hasUsers ? ['database/seed.sql'] : ['database/schema.sql', 'database/seed.sql'];
     foreach ($files as $rel) {
-        $path = dirname(__DIR__) . '/' . $rel;
-        if (!is_file($path)) {
-            throw new RuntimeException("missing: $rel");
-        }
+        $ran[] = init_db_file($pdo, $rel);
+    }
+
+    // Pending migrations (best-effort; duplicate objects are already applied).
+    $pdo->exec("CREATE TABLE IF NOT EXISTS schema_migrations (
+  filename   VARCHAR(190) NOT NULL PRIMARY KEY,
+  applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)");
+    $applied = [];
+    foreach ($pdo->query("SELECT filename FROM schema_migrations")->fetchAll(PDO::FETCH_COLUMN) as $f) {
+        $applied[$f] = true;
+    }
+    $migrations = glob(dirname(__DIR__) . '/database/migrations/*.sql') ?: [];
+    sort($migrations);
+    foreach ($migrations as $file) {
+        $name = basename($file);
+        if (isset($applied[$name])) continue;
         $done = 0;
-        foreach (init_statements((string)file_get_contents($path)) as $stmt) {
-            $pdo->query($stmt);
-            $done++;
+        foreach (init_statements((string)file_get_contents($file)) as $stmt) {
+            try {
+                $pdo->query($stmt);
+                $done++;
+            } catch (PDOException $e) {
+                $msg = strtolower($e->getMessage());
+                $state = (string)($e->errorInfo[0] ?? '');
+                if (str_contains($msg, 'already exists') || in_array($state, ['42P07', '42701', '42710'], true)) {
+                    continue;
+                }
+                throw $e;
+            }
         }
-        $ran[] = "$rel: $done statement(s) ok";
+        if (db_is_pgsql()) {
+            $pdo->prepare("INSERT INTO schema_migrations (filename) VALUES (?) ON CONFLICT (filename) DO NOTHING")->execute([$name]);
+        } else {
+            $pdo->prepare("INSERT IGNORE INTO schema_migrations (filename) VALUES (?)")->execute([$name]);
+        }
+        $ran[] = "$name: $done statement(s) ok";
     }
     return ['initialized' => $hasUsers, 'ran' => $ran];
+}
+
+function init_db_file(PDO $pdo, string $rel): string {
+    $path = dirname(__DIR__) . '/' . $rel;
+    if (!is_file($path)) {
+        throw new RuntimeException("missing: $rel");
+    }
+    $done = 0;
+    foreach (init_statements((string)file_get_contents($path)) as $stmt) {
+        $pdo->query($stmt);
+        $done++;
+    }
+    return "$rel: $done statement(s) ok";
 }
 
 // Direct CLI invocation: php scripts/render_init_db.php
