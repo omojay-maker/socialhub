@@ -71,7 +71,7 @@ function onImgError(ev) {
       <div>
         <div class="eyebrow">Assets</div>
         <h1>Media library</h1>
-        <p>Upload once, reuse in any post. We check the file itself — renaming a .exe to .jpg won\u2019t fool anyone.</p>
+        <p>Upload once, reuse in any post. We check the file itself — renaming a .exe to .jpg won’t fool anyone.</p>
       </div>
       <div class="page-actions">
         <div class="range-tabs">

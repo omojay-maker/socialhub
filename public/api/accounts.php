@@ -99,7 +99,10 @@ if ($action === 'sync') {
         exit;
     }
     if (isset($info['followers'])) {
-        SocialAccountModel::updateStats($id, (int)$info['followers'], $info['meta'] ?? null);
+        SocialAccountModel::updateStats($id, (int)$info['followers'], $info['meta'] ?? null, [
+            'following' => $info['following'] ?? null,
+            'posts'     => $info['posts'] ?? null,
+        ]);
     }
     SocialAccountModel::updateSync($id);
     activity_log(Auth::id(), 'account.synced', "Synced account #$id");

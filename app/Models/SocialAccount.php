@@ -184,9 +184,19 @@ class SocialAccountModel {
         db()->prepare("UPDATE social_accounts SET last_synced_at=NOW() WHERE id=?")->execute([$id]);
     }
 
-    public static function updateStats(int $id, int $followers, ?array $meta = null): void {
-        db()->prepare("UPDATE social_accounts SET followers=?, meta=COALESCE(?,meta), last_synced_at=NOW() WHERE id=?")
-            ->execute([$followers, $meta ? json_encode($meta) : null, $id]);
+    public static function updateStats(int $id, int $followers, ?array $meta = null, array $extra = []): void {
+        $sets = ['followers=?', 'meta=COALESCE(?,meta)', 'last_synced_at=NOW()'];
+        $args = [$followers, $meta ? json_encode($meta) : null];
+        // Counters a provider actually measured (never overwrite with zeros
+        // from providers that report null — null means "unknown", not zero).
+        foreach (['following' => 'following', 'posts' => 'posts_count'] as $key => $col) {
+            if (isset($extra[$key]) && $extra[$key] !== null) {
+                $sets[] = "$col=?";
+                $args[] = (int)$extra[$key];
+            }
+        }
+        $args[] = $id;
+        db()->prepare('UPDATE social_accounts SET ' . implode(', ', $sets) . ' WHERE id=?')->execute($args);
     }
 
     /** Remove token-less demo accounts once the real thing connects. */

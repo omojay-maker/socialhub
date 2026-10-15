@@ -91,7 +91,7 @@ onMounted(load)
           </div>
           <div class="field">
             <label class="label" for="up">Starting password</label>
-            <input id="up" v-model="form.password" type="password" placeholder="Something they\u2019ll change" />
+            <input id="up" v-model="form.password" type="password" placeholder="Something they’ll change" />
           </div>
           <div class="field">
             <label class="label" for="ur">Role</label>

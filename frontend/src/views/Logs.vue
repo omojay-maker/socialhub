@@ -58,7 +58,7 @@ function when(s) {
       <div>
         <div class="eyebrow">Trust</div>
         <h1>Audit log</h1>
-        <p>{{ logs.length ? `${logs.length} events · ${uniqueActions} kinds. If something looks off, this is where you\u2019ll find who did what.` : 'A running record of who did what, and when. Nothing here yet.' }}</p>
+        <p>{{ logs.length ? `${logs.length} events · ${uniqueActions} kinds. If something looks off, this is where you’ll find who did what.` : 'A running record of who did what, and when. Nothing here yet.' }}</p>
       </div>
       <div class="topbar-search" style="width:260px">
         <Search />
@@ -71,7 +71,7 @@ function when(s) {
       <div v-else-if="!shown.length" class="panel-body" style="text-align:center;padding:44px 24px">
         <ScrollText style="width:26px;height:26px;margin:0 auto 10px;color:var(--fg-faint)" />
         <div style="font-weight:700">{{ logs.length ? 'No match for that filter' : 'Nothing recorded yet' }}</div>
-        <p class="human-note" style="margin-top:4px">{{ logs.length ? 'Try a name, or just “publish”.' : 'Publish, schedule or invite someone — it\u2019ll show up here.' }}</p>
+        <p class="human-note" style="margin-top:4px">{{ logs.length ? 'Try a name, or just “publish”.' : 'Publish, schedule or invite someone — it’ll show up here.' }}</p>
       </div>
       <div v-else class="list">
         <div v-for="l in shown" :key="l.id" class="list-row">

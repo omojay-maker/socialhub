@@ -51,7 +51,7 @@ function useTemplate(kind) {
     content.value = 'Small update, big difference: faster loading, smoother chats, fewer taps to get where you are going.'
     hashtags.value = '#Update #INK'
   } else {
-    content.value = 'Behind the scenes today — the team testing, tweaking and making sure tomorrow\u2019s post lands right.'
+    content.value = 'Behind the scenes today — the team testing, tweaking and making sure tomorrow’s post lands right.'
     hashtags.value = '#BehindTheScenes #Team'
   }
 }
@@ -108,7 +108,7 @@ async function submit(action) {
       <div>
         <div class="eyebrow">Write</div>
         <h1>Composer</h1>
-        <p>One draft, every channel. Write it like you\u2019d say it — the preview on the right is what followers actually see.</p>
+        <p>One draft, every channel. Write it like you’d say it — the preview on the right is what followers actually see.</p>
       </div>
       <span class="badge muted">Mock send — nothing leaves the building</span>
     </div>
@@ -224,7 +224,7 @@ async function submit(action) {
       <div class="stack g2">
         <div class="panel">
           <div class="panel-head">
-            <h3><Eye style="width:14px;height:14px;display:inline;vertical-align:-2px" /> How it\u2019ll look</h3>
+            <h3><Eye style="width:14px;height:14px;display:inline;vertical-align:-2px" /> How it’ll look</h3>
             <span class="sub">{{ selected.length ? selected.join(' · ') : 'Pick a channel' }}</span>
           </div>
           <div class="panel-body">

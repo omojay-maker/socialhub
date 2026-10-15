@@ -20,7 +20,7 @@ async function submit() {
     await auth.login(email.value, password.value)
     router.push('/dashboard')
   } catch (e) {
-    error.value = e.response?.data?.message || e.message || 'That didn\u2019t work — check the email and password.'
+    error.value = e.response?.data?.message || e.message || 'That didn’t work — check the email and password.'
   } finally {
     loading.value = false
   }
@@ -67,7 +67,7 @@ function fill(which) {
             <Layers />
             <div>
               <b>Every channel, tracked solo</b>
-              <span>One post can succeed on Instagram and flop on LinkedIn — you\u2019ll see both.</span>
+              <span>One post can succeed on Instagram and flop on LinkedIn — you’ll see both.</span>
             </div>
           </div>
         </div>

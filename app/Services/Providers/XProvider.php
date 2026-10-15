@@ -381,15 +381,17 @@ class XProvider extends AbstractSocialProvider {
 
         $m = $r['body']['data']['public_metrics'] ?? [];
         $followers = (int)($m['followers_count'] ?? 0);
+        $following = isset($m['following_count']) ? (int)$m['following_count'] : null;
+        $tweets = isset($m['tweet_count']) ? (int)$m['tweet_count'] : null;
         SocialAccountModel::updateStats($accountId, $followers, [
             'x_user_id'   => $id,
-            'tweet_count' => (int)($m['tweet_count'] ?? 0),
-        ]);
+            'tweet_count' => $tweets ?? 0,
+        ], ['following' => $following, 'posts' => $tweets]);
 
         return [
             'followers'  => $followers,
-            'following'  => (int)($m['following_count'] ?? 0),
-            'posts'      => (int)($m['tweet_count'] ?? 0),
+            'following'  => $following,
+            'posts'      => $tweets,
             'engagement' => null,
             'demo'       => false,
         ];

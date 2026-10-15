@@ -59,7 +59,7 @@ function dateKey(d) {
       <div>
         <div class="eyebrow">Plan</div>
         <h1>Calendar</h1>
-        <p>{{ monthLabel }} — what\u2019s already out, what\u2019s queued, and where the gaps are. Scheduled posts go out on the cron run.</p>
+        <p>{{ monthLabel }} — what’s already out, what’s queued, and where the gaps are. Scheduled posts go out on the cron run.</p>
       </div>
       <div class="page-actions">
         <span class="badge scheduled">{{ scheduled.length }} in the queue</span>
@@ -129,7 +129,7 @@ function dateKey(d) {
       <div v-if="loading" class="panel-body faint">Loading…</div>
       <div v-else-if="!scheduled.length" class="panel-body" style="text-align:center;padding:36px">
         <div style="font-weight:700">Queue is empty</div>
-        <p class="human-note" style="margin-top:4px">Write something in the <router-link to="/create" class="link">composer</router-link> and hit Schedule — it\u2019ll wait here until cron picks it up.</p>
+        <p class="human-note" style="margin-top:4px">Write something in the <router-link to="/create" class="link">composer</router-link> and hit Schedule — it’ll wait here until cron picks it up.</p>
       </div>
       <div v-else class="table-wrap">
         <table class="table">

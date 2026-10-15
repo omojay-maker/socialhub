@@ -139,6 +139,14 @@
 
 /* ---------- reset ---------- */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{color-scheme:dark}
+[data-theme="light"]{color-scheme:light}
+input:-webkit-autofill,textarea:-webkit-autofill,select:-webkit-autofill{
+  -webkit-text-fill-color:var(--fg);
+  caret-color:var(--fg);
+  transition:background-color 9999s ease-in-out 0s;
+  box-shadow:0 0 0 1000px var(--surface-2) inset;
+}
 html{
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   text-rendering:optimizeLegibility;

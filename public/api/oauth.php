@@ -189,7 +189,10 @@ if ($action === 'callback') {
         try {
             $info = $provider->getAccountInformation($accountId);
             if (empty($info['error']) && isset($info['followers'])) {
-                SocialAccountModel::updateStats($accountId, (int)$info['followers'], $info['meta'] ?? null);
+                SocialAccountModel::updateStats($accountId, (int)$info['followers'], $info['meta'] ?? null, [
+                    'following' => $info['following'] ?? null,
+                    'posts'     => $info['posts'] ?? null,
+                ]);
                 AnalyticsModel::recordLiveSnapshot(
                     $platformId,
                     $accountId,

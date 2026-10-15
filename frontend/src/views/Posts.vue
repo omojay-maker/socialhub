@@ -79,7 +79,7 @@ function statusNote(p) {
   if (p.status === 'scheduled') return `Goes out ${shortDate(p.scheduled_at)}`
   if (p.status === 'published') return `Went out ${shortDate(p.published_at || p.created_at)}`
   if (p.status === 'partial') return 'Some channels still need a retry'
-  if (p.status === 'failed') return 'Didn\u2019t go out — retry below'
+  if (p.status === 'failed') return 'Didn’t go out — retry below'
   return `Last touched ${shortDate(p.created_at)}`
 }
 
@@ -202,7 +202,7 @@ watch([q, status], () => {
           <button v-if="detail" class="icon-btn" @click="closeDetail"><X /></button>
         </div>
         <div v-if="!detail" class="panel-body">
-          <p class="human-note">Select a post on the left. You\u2019ll see the exact wording plus <b>what each channel did</b> — and a retry button wherever one failed.</p>
+          <p class="human-note">Select a post on the left. You’ll see the exact wording plus <b>what each channel did</b> — and a retry button wherever one failed.</p>
           <div class="kv" style="margin-top:12px"><span>Tip</span><span>Scheduled posts go out via cron</span></div>
           <div class="kv"><span>Deletes</span><span>Only remove the local copy</span></div>
         </div>
@@ -224,7 +224,7 @@ watch([q, status], () => {
             </div>
             <span class="badge" :class="pub.status">{{ pub.status }}</span>
           </div>
-          <div v-if="!detail.publications?.length" class="human-note" style="margin-top:8px">No channel attempts recorded yet — it\u2019s probably still a draft.</div>
+          <div v-if="!detail.publications?.length" class="human-note" style="margin-top:8px">No channel attempts recorded yet — it’s probably still a draft.</div>
           <div v-for="pub in (detail.publications || []).filter(x => x.status === 'failed')" :key="'r'+pub.id" class="row mt2">
             <button class="btn sm primary block" :disabled="busy" @click="retry(detail.id, pub.slug)">
               <RotateCcw />Retry {{ pub.platform_name }}

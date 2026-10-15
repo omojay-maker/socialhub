@@ -125,7 +125,7 @@ onMounted(load)
       <div>
         <div class="eyebrow">Channels</div>
         <h1>Accounts</h1>
-        <p>{{ accounts.length ? `${accounts.length} connected · ${totalFollowers.toLocaleString()} followers between them.` : 'No channels connected yet — start with one below.' }} Authorization always happens on the platform\u2019s site; we never see passwords.</p>
+        <p>{{ accounts.length ? `${accounts.length} connected · ${totalFollowers.toLocaleString()} followers between them.` : 'No channels connected yet — start with one below.' }} Authorization always happens on the platform’s site; we never see passwords.</p>
       </div>
       <span class="badge" :class="liveMode ? 'published' : 'muted'">{{ liveMode ? 'Live' : 'Demo mode' }}</span>
     </div>
@@ -136,7 +136,7 @@ onMounted(load)
     <div v-if="!liveMode" class="panel" style="margin-bottom:16px;border-style:dashed">
       <div class="panel-body row g2" style="align-items:flex-start">
         <ShieldCheck style="width:17px;height:17px;color:var(--warn);flex-shrink:0;margin-top:2px" />
-        <p class="human-note">You\u2019re in <b>demo mode</b> — sends are simulated. To go live, set <code>SOCIAL_MODE=live</code>, add client IDs/secrets, and follow <code>docs/oauth-setup.md</code>. Tokens are stored AES-256-GCM.</p>
+        <p class="human-note">You’re in <b>demo mode</b> — sends are simulated. To go live, set <code>SOCIAL_MODE=live</code>, add client IDs/secrets, and follow <code>docs/oauth-setup.md</code>. Tokens are stored AES-256-GCM.</p>
       </div>
     </div>
 
@@ -220,7 +220,7 @@ onMounted(load)
     <div v-if="liveMode && auth.isAdmin" class="panel" style="margin-top:16px">
       <div class="panel-head"><h3>Track something manually</h3><span class="sub">No API — list only</span></div>
       <div class="panel-body">
-        <p class="human-note">For channels with no posting API. It\u2019ll show up for planning, but can\u2019t be published to.</p>
+        <p class="human-note">For channels with no posting API. It’ll show up for planning, but can’t be published to.</p>
         <div class="grid mt3" style="grid-template-columns:1fr 1.4fr 1.1fr auto;align-items:end">
           <div class="field">
             <label class="label" for="pf">Platform</label>
@@ -231,11 +231,11 @@ onMounted(load)
           </div>
           <div class="field">
             <label class="label" for="dn">Display name</label>
-            <input id="dn" v-model="form.account_name" placeholder="1TechLink Official" />
+            <input id="dn" v-model="form.account_name" placeholder="1TechLink Official" autocomplete="off" autocapitalize="off" spellcheck="false" />
           </div>
           <div class="field">
             <label class="label" for="un">Handle</label>
-            <input id="un" v-model="form.username" placeholder="@1techlink" />
+            <input id="un" v-model="form.username" placeholder="@1techlink" autocomplete="off" autocapitalize="off" spellcheck="false" />
           </div>
           <button class="btn primary" :disabled="busy" @click="connect">{{ busy ? 'Adding…' : 'Add' }}</button>
         </div>

@@ -336,15 +336,19 @@ class TikTokProvider extends AbstractSocialProvider {
         if (!$r['ok']) return ['error' => describe_api_error($r['body'] ?? $r['error']), 'demo' => false];
 
         $u = $r['body'] ?? [];
-        $followers = (int)($u['follower_count'] ?? 0);
+        // Absent counters stay null (unknown) rather than becoming a
+        // misleading zero — the UI renders those as "—".
+        $followers = isset($u['follower_count']) ? (int)$u['follower_count'] : 0;
+        $following = isset($u['following_count']) ? (int)$u['following_count'] : null;
+        $videos = isset($u['video_count']) ? (int)$u['video_count'] : null;
         $meta = json_decode((string)($res['account']['meta'] ?? '{}'), true) ?: [];
-        $meta['video_count'] = (int)($u['video_count'] ?? 0);
-        SocialAccountModel::updateStats($accountId, $followers, $meta);
+        $meta['video_count'] = $videos ?? 0;
+        SocialAccountModel::updateStats($accountId, $followers, $meta, ['following' => $following, 'posts' => $videos]);
 
         return [
             'followers'  => $followers,
-            'following'  => (int)($u['following_count'] ?? 0),
-            'posts'      => (int)($u['video_count'] ?? 0),
+            'following'  => $following,
+            'posts'      => $videos,
             'engagement' => null,
             'demo'       => false,
         ];
