@@ -83,8 +83,10 @@ class TikTokProvider extends AbstractSocialProvider {
                 'client_secret' => $this->clientSecret(),
                 'code'          => $code,
                 'grant_type'    => 'authorization_code',
+                // Required: must byte-match the redirect_uri from authorize.
+                'redirect_uri'  => $this->redirectUri(),
             ],
-            'headers' => ['Cache-Control: no-cache'],
+            'headers' => ['Cache-Control' => 'no-cache'],
         ]);
         $b = $this->tokenBody($res, 'TikTok authorization failed');
         if (empty($b['access_token'])) throw new RuntimeException('TikTok did not return an access token');
