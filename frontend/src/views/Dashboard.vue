@@ -7,7 +7,7 @@ import { useAuthStore } from '../stores/auth'
 import { Chart, registerables } from 'chart.js'
 import {
   Users, Heart, Send, Eye, ArrowUp, Plus, Moon, Sun,
-  Pencil, CalendarDays, Layers, ChevronRight,
+  Pencil, CalendarDays, Layers, ChevronRight, Bell,
   Instagram, Linkedin, Twitter, Music2, MessageSquare, Share2
 } from 'lucide-vue-next'
 
@@ -37,14 +37,13 @@ const dateLabel = new Date().toLocaleDateString('en-US', { weekday: 'short', mon
 const avgRate = computed(() =>
   byPlatform.value.length
     ? (byPlatform.value.reduce((a, p) => a + Number(p.eng_rate || 0), 0) / byPlatform.value.length)
-    : 4.75
+    : 0
 )
-const totalInteractions = computed(() => {
-  const t = byPlatform.value.reduce((a, p) => a + Number(p.likes || 0) + Number(p.comments || 0) + Number(p.shares || 0), 0)
-  return t || 8920
-})
-const audience = computed(() => Number(summary.value.followers) || 26820)
-const published = computed(() => Number(summary.value.posts) || 4)
+const totalInteractions = computed(() =>
+  byPlatform.value.reduce((a, p) => a + Number(p.likes || 0) + Number(p.comments || 0) + Number(p.shares || 0), 0)
+)
+const audience = computed(() => Number(summary.value.followers) || 0)
+const published = computed(() => Number(summary.value.posts) || 0)
 
 function platClsOf(name = '') {
   const s = name.toLowerCase()
@@ -72,12 +71,7 @@ const channels = computed(() => {
       letter: p.name[0]
     }))
   }
-  return [
-    { name: 'Instagram', followers: 8920, growth: '+1.8%', cls: 'ig', bar: 'purple', letter: 'ig' },
-    { name: 'TikTok', followers: 22400, growth: '+4.2%', cls: 'tt', bar: 'pink', letter: 'tt' },
-    { name: 'LinkedIn', followers: 5420, growth: '+1.2%', cls: 'li', bar: 'cyan', letter: 'in' },
-    { name: 'X', followers: 6350, growth: '+0.9%', cls: 'x', bar: 'blue', letter: 'x' },
-  ]
+  return []
 })
 
 const filteredPosts = computed(() => {
@@ -86,7 +80,7 @@ const filteredPosts = computed(() => {
   return recent.value.filter(p => (p.platforms || '').toLowerCase().includes(postFilter.value.toLowerCase()))
 })
 
-const connectedCount = computed(() => accounts.value.length || 4)
+const connectedCount = computed(() => accounts.value.length)
 
 function platOf(p) {
   const s = (p.platforms || '').toLowerCase()
@@ -223,14 +217,6 @@ onMounted(async () => {
     }
   } finally {
     loading.value = false
-  }
-  // demo fallback posts so layout matches mock even on empty DB
-  if (!recent.value.length) {
-    recent.value = [
-      { id: 1, platforms: 'Instagram', content: "Building better connections. That's what INK is all about. #INK #Social #RealTime", created_at: '2026-09-25 15:42:00', status: 'published', author_name: 'Admin' },
-      { id: 2, platforms: 'TikTok', content: 'POV: your social manager finally posts on time. New drop, same INK energy.', created_at: '2026-09-25 11:17:00', status: 'published', author_name: 'Admin' },
-      { id: 3, platforms: 'LinkedIn', content: "The future of social is real-time. We're building INK to bring people closer, faster.", created_at: '2026-09-24 19:03:00', status: 'published', author_name: 'Admin' },
-    ]
   }
   requestAnimationFrame(drawGrowth)
   stopTheme = onChange(() => requestAnimationFrame(drawGrowth))
@@ -376,6 +362,7 @@ function goCreate() { router.push('/create') }
               <router-link to="/accounts" class="link">Manage ›</router-link>
             </div>
             <div class="panel-body">
+              <div v-if="!channels.length" class="human-note" style="padding:8px 0 4px">No channel data yet — connect an account or publish a post.</div>
               <div v-for="c in channels" :key="c.name" class="channel-row">
                 <div class="channel-top">
                   <span class="plat-ico" :class="c.cls">
@@ -487,21 +474,14 @@ function goCreate() { router.push('/create') }
             <router-link to="/logs" class="link">View all</router-link>
           </div>
           <div class="panel-body" style="padding-top:4px">
-            <div class="activity-row">
-              <span class="activity-ico"><Instagram /></span>
-              <div><b>New post published on Instagram</b><span>{{ recent[0] ? timeAgo(recent[0].created_at) : '2h ago' }}</span></div>
+            <div v-if="!recent.length && !notifications.length" class="human-note" style="padding:8px 0">Nothing yet — publish or schedule a post to get this moving.</div>
+            <div v-for="p in recent.slice(0, 3)" :key="'r'+p.id" class="activity-row">
+              <span class="activity-ico"><Send style="width:15px;height:15px" /></span>
+              <div><b class="truncate" style="max-width:220px">{{ (p.content || '').slice(0, 60) }}</b><span>{{ timeAgo(p.created_at) }} · {{ p.status }}</span></div>
             </div>
-            <div class="activity-row">
-              <span class="activity-ico"><CalendarDays /></span>
-              <div><b>Post scheduled for TikTok</b><span>4h ago</span></div>
-            </div>
-            <div class="activity-row">
-              <span class="activity-ico"><MessageSquare /></span>
-              <div><b>New comment on your post</b><span>6h ago</span></div>
-            </div>
-            <div class="activity-row">
-              <span class="activity-ico"><Users /></span>
-              <div><b>Team member invited</b><span>1d ago</span></div>
+            <div v-for="n in notifications.slice(0, 2)" :key="'n'+n.id" class="activity-row">
+              <span class="activity-ico"><Bell style="width:15px;height:15px" /></span>
+              <div><b>{{ n.title }}</b><span>{{ timeAgo(n.created_at) }}</span></div>
             </div>
           </div>
         </div>

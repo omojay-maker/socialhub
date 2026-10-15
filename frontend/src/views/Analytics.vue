@@ -22,7 +22,7 @@ const avgRate = computed(() =>
     : '0.00'
 )
 const totalReach = computed(() => byPlatform.value.reduce((a, p) => a + Number(p.reach || 0), 0))
-const totalFollowers = computed(() => Number(summary.value.followers) || byPlatform.value.reduce((a, p) => a + Number(p.followers || 0), 0) || 26820)
+const totalFollowers = computed(() => Number(summary.value.followers) || byPlatform.value.reduce((a, p) => a + Number(p.followers || 0), 0) || 0)
 const leader = computed(() => [...byPlatform.value].sort((a, b) => Number(b.reach) - Number(a.reach))[0])
 const maxReach = computed(() => Math.max(1, ...byPlatform.value.map(p => Number(p.reach))))
 
@@ -70,9 +70,9 @@ function draw() {
   const tl = document.getElementById('timelineChart')
   if (tl) {
     c1?.destroy()
-    const labels = timeline.value.length ? timeline.value.map(t => t.date) : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    const likes = timeline.value.length ? timeline.value.map(t => Number(t.likes)) : [320, 410, 380, 520, 470, 590, 640]
-    const reach = timeline.value.length ? timeline.value.map(t => Number(t.reach)) : [4200, 5100, 4800, 5900, 5400, 6200, 6800]
+    const labels = timeline.value.map(t => t.date)
+    const likes = timeline.value.map(t => Number(t.likes))
+    const reach = timeline.value.map(t => Number(t.reach))
     const ctx = tl.getContext('2d')
     const grad = ctx.createLinearGradient(0, 0, 0, 210)
     grad.addColorStop(0, 'rgba(59,130,246,.3)')
