@@ -208,12 +208,18 @@ function http_json(string $method, string $url, array $opts = []): array {
     }
     $ch = curl_init();
     $headers = ['Accept: application/json', 'User-Agent: 1TechLink-SocialHub/1.0'];
+    // An explicit caller Content-Type always wins; otherwise duplicate
+    // Content-Type headers go out and strict servers (X) ignore the body.
+    $callerType = null;
+    foreach ((array)($opts['headers'] ?? []) as $h) {
+        if (strncasecmp(ltrim((string)$h), 'Content-Type:', 13) === 0) $callerType = trim(substr(ltrim((string)$h), 13));
+    }
     if (isset($opts['json'])) {
-        $headers[] = 'Content-Type: application/json';
+        if ($callerType === null) $headers[] = 'Content-Type: application/json';
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($opts['json']));
     } elseif (isset($opts['form'])) {
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($opts['form']));
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        if ($callerType === null) $headers[] = 'Content-Type: application/x-www-form-urlencoded';
     } elseif (isset($opts['body'])) {
         // Raw bytes (media chunks). Content-Type is left to the caller.
         curl_setopt($ch, CURLOPT_POSTFIELDS, (string)$opts['body']);
