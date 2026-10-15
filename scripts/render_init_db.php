@@ -46,8 +46,31 @@ function render_init_db(): array {
     foreach ($files as $rel) {
         $ran[] = init_db_file($pdo, $rel);
     }
+    foreach (apply_pending_migrations($pdo) as $line) {
+        $ran[] = $line;
+    }
+    return ['initialized' => $hasUsers, 'ran' => $ran];
+}
 
-    // Pending migrations (best-effort; duplicate objects are already applied).
+/**
+ * Lightweight convergence for every web hit: if the users table is gone the
+ * full init runs, otherwise only pending migrations are applied (usually a
+ * single cheap SELECT and nothing else). Silent — safe to call per request.
+ */
+function render_ensure_db(): void {
+    $pdo = db();
+    try {
+        $pdo->query('SELECT 1 FROM users LIMIT 1');
+    } catch (Throwable $e) {
+        render_init_db();
+        return;
+    }
+    apply_pending_migrations($pdo);
+}
+
+/** @return string[] human-readable lines for CLI output. */
+function apply_pending_migrations(PDO $pdo): array {
+    $ran = [];
     $pdo->exec("CREATE TABLE IF NOT EXISTS schema_migrations (
   filename   VARCHAR(190) NOT NULL PRIMARY KEY,
   applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -82,7 +105,7 @@ function render_init_db(): array {
         }
         $ran[] = "$name: $done statement(s) ok";
     }
-    return ['initialized' => $hasUsers, 'ran' => $ran];
+    return $ran;
 }
 
 function init_db_file(PDO $pdo, string $rel): string {

@@ -78,7 +78,7 @@ function db(): PDO {
     // DB_SSLMODE=require|disable when you need to force it.
     if ($driver === 'pgsql') {
         $sslmode = (string)env_get('DB_SSLMODE', 'prefer');
-        $dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=$sslmode";
+        $dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=$sslmode;connect_timeout=5";
     } else {
         $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4";
     }
