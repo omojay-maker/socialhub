@@ -24,6 +24,8 @@ RUN printf '<VirtualHost *:80>\n\
     SetEnvIf X-Forwarded-Proto "https" HTTPS=on\n\
     RewriteEngine On\n\
     RewriteRule "^/$" "/PHP_projects/social-hub/public/index.php" [L]\n\
+    RewriteRule "^/terms.html$" "/PHP_projects/social-hub/public/terms.html" [L]\n\
+    RewriteRule "^/privacy.html$" "/PHP_projects/social-hub/public/privacy.html" [L]\n\
     <Directory /var/www/html>\n\
         AllowOverride All\n\
         Require all granted\n\
