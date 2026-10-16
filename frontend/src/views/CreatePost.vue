@@ -22,7 +22,7 @@ const overLimit = computed(() => contentLen.value > LIMIT)
 const hashtagCount = computed(() => (hashtags.value.match(/#/g) || []).length)
 const remaining = computed(() => LIMIT - contentLen.value)
 const readyToShip = computed(() => content.value.trim().length > 3 && selected.value.length > 0 && !overLimit.value)
-const previewTags = computed(() => hashtags.value.trim() || '#INK #Social')
+const previewTags = computed(() => hashtags.value.trim())
 
 onMounted(async () => {
   const { data } = await client.get('/public/api/accounts.php?action=list')
@@ -46,10 +46,10 @@ function toggleMedia(id) {
 function useTemplate(kind) {
   if (kind === 'launch') {
     content.value = 'Something new is on its way. We have been quietly building, and next week you finally get to see it.'
-    hashtags.value = '#INK #Launch #RealTime'
+    hashtags.value = '#Launch #Announcement'
   } else if (kind === 'update') {
     content.value = 'Small update, big difference: faster loading, smoother chats, fewer taps to get where you are going.'
-    hashtags.value = '#Update #INK'
+    hashtags.value = '#Update'
   } else {
     content.value = 'Behind the scenes today — the team testing, tweaking and making sure tomorrow’s post lands right.'
     hashtags.value = '#BehindTheScenes #Team'
@@ -158,7 +158,7 @@ async function submit(action) {
 
           <div class="field mt3">
             <label class="label" for="hashtags">Hashtags <span class="faint" style="font-weight:400">(optional, space them out)</span></label>
-            <input id="hashtags" v-model="hashtags" placeholder="#INK #RealTime" />
+            <input id="hashtags" v-model="hashtags" placeholder="#Launch #Announcement" />
           </div>
 
           <div class="field mt3">
@@ -236,7 +236,7 @@ async function submit(action) {
               </div>
             </div>
             <p style="margin-top:12px;font-size:13.5px;line-height:1.65;white-space:pre-wrap">{{ content || 'Nothing written yet — your words land here the moment you type.' }}</p>
-            <p style="margin-top:6px;font-size:13px;color:#3b82f6">{{ previewTags }}</p>
+            <p v-if="previewTags" style="margin-top:6px;font-size:13px;color:#3b82f6">{{ previewTags }}</p>
             <div class="row g3 faint" style="font-size:12px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border-soft)">
               <span>♡ Like</span><span>Comment</span><span>Share</span>
             </div>

@@ -14,4 +14,6 @@ if (!Auth::check()) { http_response_code(401); echo json_encode(['success'=>fals
 $summary = AnalyticsModel::summary();
 $byPlatform = AnalyticsModel::byPlatform();
 $timeline = AnalyticsModel::timeline(null,7);
-echo json_encode(['success'=>true,'summary'=>$summary,'byPlatform'=>$byPlatform,'timeline'=>$timeline]);
+$trend = AnalyticsModel::trend(7);
+$daily = AnalyticsModel::dailySeries(90);
+echo json_encode(['success'=>true,'summary'=>$summary,'byPlatform'=>$byPlatform,'timeline'=>$timeline,'trend'=>$trend,'daily'=>$daily]);

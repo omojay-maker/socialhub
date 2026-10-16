@@ -27,6 +27,50 @@ class AnalyticsModel {
         return $stmt->fetchAll();
     }
 
+    /** Daily aggregates across all platforms for the last N days. */
+    public static function dailySeries(int $days = 30): array {
+        $days = max(2, min(365, $days));
+        $from = date('Y-m-d', strtotime("-$days days"));
+        $stmt = db()->prepare("SELECT date, SUM(likes+comments+shares) AS interactions, SUM(reach) AS reach, SUM(followers) AS followers FROM analytics WHERE date >= ? GROUP BY date ORDER BY date ASC");
+        $stmt->execute([$from]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Current vs previous window totals for honest trend pills.
+     * Returns ['current' => [...], 'previous' => [...]] with keys
+     * interactions, reach, followers, posts. Zeros when there is no history.
+     */
+    /**
+     * Current vs previous window totals for honest trend pills.
+     * Keys: interactions, reach, posts (windowed sums) + followers
+     * (point-in-time — audience deltas need history, which dailySeries
+     * provides instead). Zeros when there is no history.
+     */
+    public static function trend(int $days = 7): array {
+        $pdo = db();
+        $mid = date('Y-m-d', strtotime("-$days days"));
+        $start = date('Y-m-d', strtotime('-' . ($days * 2) . ' days'));
+        $window = function (string $from, string $to) use ($pdo): array {
+            $s = $pdo->prepare("SELECT SUM(likes+comments+shares) AS interactions, SUM(reach) AS reach FROM analytics WHERE date >= ? AND date < ?");
+            $s->execute([$from, $to]);
+            $r = $s->fetch() ?: [];
+            // Window bounds are DATE strings; post timestamps compare fine.
+            $p = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE status IN ('published','partial') AND COALESCE(published_at, created_at) >= ? AND COALESCE(published_at, created_at) < ?");
+            $p->execute([$from . ' 00:00:00', $to . ' 00:00:00']);
+            return [
+                'interactions' => (int)($r['interactions'] ?? 0),
+                'reach'        => (int)($r['reach'] ?? 0),
+                'posts'        => (int)$p->fetchColumn(),
+            ];
+        };
+        $followers = (int)$pdo->query("SELECT SUM(followers) FROM social_accounts WHERE connection_status='connected'")->fetchColumn();
+        return [
+            'current'  => $window($mid, '2999-01-01') + ['followers' => $followers],
+            'previous' => $window($start, $mid) + ['followers' => $followers],
+        ];
+    }
+
     /**
      * Record today's counters for a live account. Portable UPDATE-first
      * upsert (no ON CONFLICT / ON DUPLICATE dialect). Engagement starts at

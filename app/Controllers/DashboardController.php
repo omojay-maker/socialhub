@@ -9,8 +9,10 @@ class DashboardController {
         $notifications=NotificationModel::all(null,null,false);
         $unread=NotificationModel::unreadCount();
         $byPlatform=AnalyticsModel::byPlatform();
+        $trend=AnalyticsModel::trend(7);
+        $daily=AnalyticsModel::dailySeries(90);
         // top post
         $top=db()->query("SELECT p.id,p.content, (SELECT SUM(a.likes+a.comments+a.shares) FROM analytics a LIMIT 1) as eng FROM posts p WHERE p.status IN ('published','partial') ORDER BY p.published_at DESC LIMIT 1")->fetch();
-        return compact('summary','accounts','recentPosts','notifications','unread','byPlatform','top');
+        return compact('summary','accounts','recentPosts','notifications','unread','byPlatform','top','trend','daily');
     }
 }

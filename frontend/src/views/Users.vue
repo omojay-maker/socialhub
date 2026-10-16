@@ -83,11 +83,11 @@ onMounted(load)
         <div class="grid" style="grid-template-columns:1fr 1.4fr 1fr 1fr auto;align-items:end">
           <div class="field">
             <label class="label" for="un">Full name</label>
-            <input id="un" v-model="form.name" placeholder="Adaeze Okafor" />
+            <input id="un" v-model="form.name" placeholder="Full name" />
           </div>
           <div class="field">
             <label class="label" for="ue">Work email</label>
-            <input id="ue" v-model="form.email" type="email" placeholder="adaeze@1techlink.com" />
+            <input id="ue" v-model="form.email" type="email" placeholder="name@company.com" />
           </div>
           <div class="field">
             <label class="label" for="up">Starting password</label>

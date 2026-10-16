@@ -3,7 +3,7 @@ import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import client from '../api/client'
 import { useTheme } from '../composables/useTheme'
 import { Chart, registerables } from 'chart.js'
-import { TrendingUp, Eye, Users, Heart, ArrowUp, Instagram, Linkedin, Music2 } from 'lucide-vue-next'
+import { TrendingUp, Eye, Users, Heart, ArrowUp, ArrowDown, Instagram, Linkedin, Music2 } from 'lucide-vue-next'
 
 Chart.register(...registerables)
 Chart.defaults.font.family = "'Inter',system-ui,sans-serif"
@@ -14,6 +14,8 @@ const { cssVar, onChange } = useTheme()
 const summary = ref({})
 const byPlatform = ref([])
 const timeline = ref([])
+const trend = ref({ current: { interactions: 0, reach: 0, posts: 0 }, previous: { interactions: 0, reach: 0, posts: 0 } })
+const daily = ref([])
 const loading = ref(true)
 
 const avgRate = computed(() =>
@@ -31,16 +33,33 @@ let c2 = null
 let stopTheme = null
 
 function spark(values, color) {
+  if (!values.length) return { line: '', color }
   const min = Math.min(...values), span = Math.max(...values) - min || 1
-  const pts = values.map((v, i) => `${(i * 92 / (values.length - 1)).toFixed(1)},${(32 - ((v - min) / span) * 26).toFixed(1)}`).join(' L')
+  const pts = values.map((v, i) => `${(i * 92 / Math.max(1, values.length - 1)).toFixed(1)},${(32 - ((v - min) / span) * 26).toFixed(1)}`).join(' L')
   return { line: `M${pts}`, color }
 }
-const sparks = computed(() => [
-  spark([12, 14, 13, 16, 15, 18, 20, 22], '#3b82f6'),
-  spark([8, 10, 9, 12, 14, 13, 16, 19], '#a855f7'),
-  spark([6, 8, 7, 9, 11, 10, 13, 15], '#22d3ee'),
-  spark([10, 9, 11, 12, 11, 13, 14, 15], '#f59e0b'),
-])
+function deltaFor(key) {
+  const cur = Number(trend.value.current?.[key] || 0)
+  const prev = Number(trend.value.previous?.[key] || 0)
+  if (prev > 0) {
+    const pct = ((cur - prev) / prev) * 100
+    return { text: `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`, dir: pct >= 0 ? 'up' : 'down' }
+  }
+  if (cur > 0) return { text: 'new', dir: 'up' }
+  return null
+}
+const deltaReach = computed(() => deltaFor('reach'))
+const deltaEngagement = computed(() => deltaFor('interactions'))
+const sparks = computed(() => {
+  const col = k => daily.value.map(d => Number(d[k] || 0))
+  const rate = daily.value.map(d => Number(d.reach) > 0 ? (Number(d.interactions) / Number(d.reach)) * 100 : 0)
+  return [
+    spark(col('followers'), '#3b82f6'),
+    spark(col('reach'), '#a855f7'),
+    spark(col('interactions'), '#22d3ee'),
+    spark(rate, '#f59e0b'),
+  ]
+})
 
 onMounted(async () => {
   try {
@@ -48,6 +67,8 @@ onMounted(async () => {
     summary.value = data.summary || {}
     byPlatform.value = data.byPlatform || []
     timeline.value = data.timeline || []
+    if (data.trend) trend.value = data.trend
+    daily.value = data.daily || []
   } finally {
     loading.value = false
   }
@@ -141,7 +162,7 @@ function platCls(name = '') {
         <h1>Analytics</h1>
         <p>Last 7 days across every channel{{ leader ? ` — ${leader.name} is pulling the most weight right now.` : '.' }}</p>
       </div>
-      <span class="badge warn">Demo numbers until the Graph API is wired up</span>
+      <span v-if="!byPlatform.length" class="badge muted">No data yet — connect an account or publish</span>
     </div>
 
     <div v-if="loading" class="stat-grid">
@@ -154,32 +175,32 @@ function platCls(name = '') {
           <div class="stat-top"><span class="stat-ico blue"><Users /></span><span class="stat-label">Followers</span></div>
           <div class="stat-value">{{ totalFollowers.toLocaleString() }}</div>
           <div class="stat-meta">
-            <div><span class="delta up"><ArrowUp />+2.4%</span><div class="vs">steady climb</div></div>
-            <div class="spark"><svg viewBox="0 0 92 36" preserveAspectRatio="none"><path :d="sparks[0].line" fill="none" :stroke="sparks[0].color" stroke-width="2" stroke-linecap="round" /></svg></div>
+            <div><div class="vs">across connected accounts</div></div>
+            <div v-if="sparks[0].line" class="spark"><svg viewBox="0 0 92 36" preserveAspectRatio="none"><path :d="sparks[0].line" fill="none" :stroke="sparks[0].color" stroke-width="2" stroke-linecap="round" /></svg></div>
           </div>
         </div>
         <div class="stat-card">
           <div class="stat-top"><span class="stat-ico pink"><Eye /></span><span class="stat-label">Reach · 7d</span></div>
           <div class="stat-value">{{ totalReach.toLocaleString() }}</div>
           <div class="stat-meta">
-            <div><span class="delta up"><ArrowUp />+6.1%</span><div class="vs">{{ Number(summary.impressions || 0).toLocaleString() }} impressions</div></div>
-            <div class="spark"><svg viewBox="0 0 92 36" preserveAspectRatio="none"><path :d="sparks[1].line" fill="none" :stroke="sparks[1].color" stroke-width="2" stroke-linecap="round" /></svg></div>
+            <div><span v-if="deltaReach" class="delta" :class="deltaReach.dir"><ArrowUp v-if="deltaReach.dir==='up'" /><ArrowDown v-else />{{ deltaReach.text }}</span><div class="vs">{{ deltaReach ? 'vs. prior 7 days' : 'no prior data' }} · {{ Number(summary.impressions || 0).toLocaleString() }} impressions</div></div>
+            <div v-if="sparks[1].line" class="spark"><svg viewBox="0 0 92 36" preserveAspectRatio="none"><path :d="sparks[1].line" fill="none" :stroke="sparks[1].color" stroke-width="2" stroke-linecap="round" /></svg></div>
           </div>
         </div>
         <div class="stat-card">
           <div class="stat-top"><span class="stat-ico cyan"><Heart /></span><span class="stat-label">Engagement</span></div>
           <div class="stat-value">{{ Number(summary.engagement || 0).toLocaleString() }}</div>
           <div class="stat-meta">
-            <div><span class="delta up"><ArrowUp />+3.2%</span><div class="vs">likes + replies + shares</div></div>
-            <div class="spark"><svg viewBox="0 0 92 36" preserveAspectRatio="none"><path :d="sparks[2].line" fill="none" :stroke="sparks[2].color" stroke-width="2" stroke-linecap="round" /></svg></div>
+            <div><span v-if="deltaEngagement" class="delta" :class="deltaEngagement.dir"><ArrowUp v-if="deltaEngagement.dir==='up'" /><ArrowDown v-else />{{ deltaEngagement.text }}</span><div class="vs">{{ deltaEngagement ? 'vs. prior 7 days' : 'no prior data' }} · likes + replies + shares</div></div>
+            <div v-if="sparks[2].line" class="spark"><svg viewBox="0 0 92 36" preserveAspectRatio="none"><path :d="sparks[2].line" fill="none" :stroke="sparks[2].color" stroke-width="2" stroke-linecap="round" /></svg></div>
           </div>
         </div>
         <div class="stat-card">
           <div class="stat-top"><span class="stat-ico violet"><TrendingUp /></span><span class="stat-label">Avg. rate</span></div>
           <div class="stat-value">{{ avgRate }}%</div>
           <div class="stat-meta">
-            <div><span class="delta up"><ArrowUp />+0.4pt</span><div class="vs">unweighted mean</div></div>
-            <div class="spark"><svg viewBox="0 0 92 36" preserveAspectRatio="none"><path :d="sparks[3].line" fill="none" :stroke="sparks[3].color" stroke-width="2" stroke-linecap="round" /></svg></div>
+            <div><div class="vs">unweighted mean</div></div>
+            <div v-if="sparks[3].line" class="spark"><svg viewBox="0 0 92 36" preserveAspectRatio="none"><path :d="sparks[3].line" fill="none" :stroke="sparks[3].color" stroke-width="2" stroke-linecap="round" /></svg></div>
           </div>
         </div>
       </div>

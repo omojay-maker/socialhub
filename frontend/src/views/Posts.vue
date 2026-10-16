@@ -119,7 +119,7 @@ watch([q, status], () => {
           <div class="panel-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
             <div class="topbar-search grow" style="min-width:220px;width:auto">
               <Search />
-              <input v-model="q" type="search" placeholder="Try “launch”, “#INK”, or a teammate’s name…" @keyup.enter="load" />
+              <input v-model="q" type="search" placeholder="Try a word, #hashtag, or a teammate’s name…" @keyup.enter="load" />
             </div>
             <select v-model="status" style="width:142px" @change="load">
               <option value="">All statuses</option>

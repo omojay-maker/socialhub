@@ -6,7 +6,7 @@ import { useTheme } from '../composables/useTheme'
 import { useAuthStore } from '../stores/auth'
 import { Chart, registerables } from 'chart.js'
 import {
-  Users, Heart, Send, Eye, ArrowUp, Plus, Moon, Sun,
+  Users, Heart, Send, Eye, ArrowUp, ArrowDown, Plus, Moon, Sun,
   Pencil, CalendarDays, Layers, ChevronRight, Bell,
   Instagram, Linkedin, Music2, MessageSquare, Share2
 } from 'lucide-vue-next'
@@ -28,6 +28,8 @@ const unread = ref(0)
 const loading = ref(true)
 const range = ref('7D')
 const postFilter = ref('All')
+const trend = ref({ current: { interactions: 0, reach: 0, posts: 0, followers: 0 }, previous: { interactions: 0, reach: 0, posts: 0, followers: 0 } })
+const daily = ref([])
 
 const hour = new Date().getHours()
 const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
@@ -93,12 +95,11 @@ function hashtags(text = '') {
 function plainText(text = '') {
   return text.replace(/#\w+/g, '').trim() || text
 }
-function eng(post, key, fb) {
+function eng(post, key) {
+  // Real per-post engagement only: the list endpoint carries no counters,
+  // so unknown renders as "—" instead of a made-up number.
   if (post[key] !== undefined && post[key] !== null) return post[key]
-  const seed = Number(post.id) || 7
-  if (key === 'likes') return (seed * 37) % 220 + 40
-  if (key === 'comments') return (seed * 13) % 28 + 6
-  return (seed * 7) % 14 + 3
+  return null
 }
 function fmtDate(s) {
   if (!s) return ''
@@ -115,11 +116,12 @@ function timeAgo(s) {
   return h < 24 ? `${h}h ago` : `${Math.round(h / 24)}d ago`
 }
 
-/* ---- sparklines (demo-shaped, seeded from live totals) ---- */
+/* ---- sparklines from the real daily series (hidden when too thin) ---- */
 function sparkPath(values, w = 92, h = 36) {
+  if (!values.length) return ''
   const min = Math.min(...values), max = Math.max(...values)
   const span = max - min || 1
-  const step = w / (values.length - 1)
+  const step = values.length > 1 ? w / (values.length - 1) : 0
   const pts = values.map((v, i) => {
     const x = (i * step).toFixed(1)
     const y = (h - 4 - ((v - min) / span) * (h - 10)).toFixed(1)
@@ -127,33 +129,41 @@ function sparkPath(values, w = 92, h = 36) {
   })
   return `M${pts.join(' L')}`
 }
-const sparkA = computed(() => sparkPath([12, 14, 13, 15, 16, 15, 18, 20, 19, 22, 24, 26]))
-const sparkB = computed(() => sparkPath([8, 10, 9, 12, 11, 14, 13, 16, 15, 19, 18, 23]))
-const sparkC = computed(() => sparkPath([5, 6, 5, 7, 6, 8, 7, 9, 8, 10, 12, 18]))
-const sparkD = computed(() => sparkPath([10, 9, 11, 10, 12, 11, 13, 12, 14, 13, 15, 17]))
+const seriesVals = key => daily.value.map(d => Number(d[key] || 0))
+const sparkA = computed(() => sparkPath(seriesVals('followers')))
+const sparkB = computed(() => sparkPath(seriesVals('interactions')))
+const sparkD = computed(() => sparkPath(seriesVals('reach')))
+
+/* ---- honest deltas: null means "no history", never a made-up number ---- */
+function deltaFor(key) {
+  const cur = Number(trend.value.current?.[key] || 0)
+  const prev = Number(trend.value.previous?.[key] || 0)
+  if (prev > 0) {
+    const pct = ((cur - prev) / prev) * 100
+    return { text: `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`, dir: pct >= 0 ? 'up' : 'down' }
+  }
+  if (cur > 0) return { text: 'new', dir: 'up' }
+  return null
+}
+const deltaEngagement = computed(() => deltaFor('interactions'))
+const deltaReach = computed(() => deltaFor('reach'))
+const deltaPublished = computed(() => deltaFor('posts'))
 
 /* ---- main growth chart ---- */
 let growthChart = null
 let stopTheme = null
 
-function seriesFor(r) {
-  const n = r === '7D' ? 7 : r === '30D' ? 30 : r === '90D' ? 90 : 120
-  const base = audience.value - n * 210
-  let v = base
-  return Array.from({ length: n }, (_, i) => {
-    v += 140 + Math.sin(i / 3) * 90 + (i / n) * 160
-    return Math.round(v)
-  })
+function rangeDays() {
+  return range.value === '7D' ? 7 : range.value === '30D' ? 30 : range.value === '90D' ? 90 : 365
 }
-function labelsFor(r) {
-  const n = r === '7D' ? 7 : r === '30D' ? 30 : r === '90D' ? 90 : 120
-  const out = []
-  for (let i = n - 1; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    out.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }))
-  }
-  return out
+function seriesFor() {
+  return daily.value.slice(-rangeDays()).map(d => Number(d.followers || 0))
+}
+function labelsFor() {
+  return daily.value.slice(-rangeDays()).map(d => {
+    const dt = new Date(d.date + 'T12:00:00')
+    return isNaN(dt) ? d.date : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  })
 }
 
 function drawGrowth() {
@@ -164,8 +174,8 @@ function drawGrowth() {
   const grid = cssVar('--border-soft')
   const tipBg = '#0b1330'
   Chart.defaults.color = faint
-  const data = seriesFor(range.value)
-  const labels = labelsFor(range.value)
+  const data = seriesFor()
+  const labels = labelsFor()
   const ctx = el.getContext('2d')
   const grad = ctx.createLinearGradient(0, 0, 0, 200)
   grad.addColorStop(0, 'rgba(59,130,246,.35)')
@@ -210,6 +220,8 @@ onMounted(async () => {
       byPlatform.value = data.byPlatform || []
       notifications.value = data.notifications || []
       unread.value = data.unread || 0
+      if (data.trend) trend.value = data.trend
+      daily.value = data.daily || []
     }
   } finally {
     loading.value = false
@@ -262,10 +274,9 @@ function goCreate() { router.push('/create') }
             <div class="stat-value">{{ audience.toLocaleString() }}</div>
             <div class="stat-meta">
               <div>
-                <span class="delta up"><ArrowUp />+2.4%</span>
-                <div class="vs">vs. last 7 days</div>
+                <div class="vs">across {{ accounts.length }} account{{ accounts.length === 1 ? '' : 's' }}</div>
               </div>
-              <div class="spark">
+              <div v-if="sparkA" class="spark">
                 <svg viewBox="0 0 92 36" preserveAspectRatio="none">
                   <path :d="sparkA" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" />
                   <path :d="`${sparkA} L92,36 L0,36 Z`" fill="rgba(59,130,246,.15)" stroke="none" />
@@ -282,10 +293,10 @@ function goCreate() { router.push('/create') }
             <div class="stat-value">{{ Number(totalInteractions).toLocaleString() }}</div>
             <div class="stat-meta">
               <div>
-                <span class="delta up"><ArrowUp />+6.1%</span>
-                <div class="vs">vs. last 7 days</div>
+                <span v-if="deltaEngagement" class="delta" :class="deltaEngagement.dir"><ArrowUp v-if="deltaEngagement.dir==='up'" /><ArrowDown v-else />{{ deltaEngagement.text }}</span>
+                <div class="vs">{{ deltaEngagement ? 'vs. prior 7 days' : 'no prior data' }}</div>
               </div>
-              <div class="spark">
+              <div v-if="sparkB" class="spark">
                 <svg viewBox="0 0 92 36" preserveAspectRatio="none">
                   <path :d="sparkB" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" />
                   <path :d="`${sparkB} L92,36 L0,36 Z`" fill="rgba(168,85,247,.15)" stroke="none" />
@@ -302,14 +313,8 @@ function goCreate() { router.push('/create') }
             <div class="stat-value">{{ published }}</div>
             <div class="stat-meta">
               <div>
-                <span class="delta up"><ArrowUp />+100%</span>
-                <div class="vs">vs. last 7 days</div>
-              </div>
-              <div class="spark">
-                <svg viewBox="0 0 92 36" preserveAspectRatio="none">
-                  <path :d="sparkC" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" />
-                  <path :d="`${sparkC} L92,36 L0,36 Z`" fill="rgba(34,211,238,.13)" stroke="none" />
-                </svg>
+                <span v-if="deltaPublished" class="delta" :class="deltaPublished.dir"><ArrowUp v-if="deltaPublished.dir==='up'" /><ArrowDown v-else />{{ deltaPublished.text }}</span>
+                <div class="vs">{{ deltaPublished ? 'vs. prior 7 days' : 'no prior data' }}</div>
               </div>
             </div>
           </div>
@@ -322,10 +327,10 @@ function goCreate() { router.push('/create') }
             <div class="stat-value">{{ Number(avgRate).toFixed(2) }}%</div>
             <div class="stat-meta">
               <div>
-                <span class="delta up"><ArrowUp />+1.8%</span>
-                <div class="vs">vs. last 7 days</div>
+                <span v-if="deltaReach" class="delta" :class="deltaReach.dir"><ArrowUp v-if="deltaReach.dir==='up'" /><ArrowDown v-else />{{ deltaReach.text }}</span>
+                <div class="vs">{{ deltaReach ? 'reach vs. prior 7 days' : 'no prior data' }}</div>
               </div>
-              <div class="spark">
+              <div v-if="sparkD" class="spark">
                 <svg viewBox="0 0 92 36" preserveAspectRatio="none">
                   <path :d="sparkD" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" />
                   <path :d="`${sparkD} L92,36 L0,36 Z`" fill="rgba(245,158,11,.14)" stroke="none" />
@@ -396,7 +401,7 @@ function goCreate() { router.push('/create') }
               <div class="feed-thumb">
                 <template v-if="platOf(p)==='TikTok'">♪</template>
                 <template v-else-if="platOf(p)==='LinkedIn'">◈</template>
-                <template v-else>INK</template>
+                <template v-else>{{ (platOf(p) || '?')[0] }}</template>
               </div>
               <div class="feed-main">
                 <div class="feed-meta">
@@ -408,10 +413,10 @@ function goCreate() { router.push('/create') }
                 <div class="feed-text">{{ plainText(p.content) }}</div>
                 <div v-if="hashtags(p.content)" class="feed-tags">{{ hashtags(p.content) }}</div>
                 <div class="feed-date">{{ fmtDate(p.created_at) }}</div>
-                <div class="feed-stats">
+                <div v-if="eng(p, 'likes') !== null" class="feed-stats">
                   <span>♡ {{ eng(p, 'likes') }}</span>
-                  <span><MessageSquare /> {{ eng(p, 'comments') }}</span>
-                  <span><Share2 /> {{ eng(p, 'shares') }}</span>
+                  <span><MessageSquare /> {{ eng(p, 'comments') ?? '—' }}</span>
+                  <span><Share2 /> {{ eng(p, 'shares') ?? '—' }}</span>
                 </div>
               </div>
               <div class="feed-side">
