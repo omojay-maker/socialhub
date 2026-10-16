@@ -83,18 +83,6 @@ return [
     // Must be one of the privacy_level_options from /v2/creator_info/query/.
     'TIKTOK_PRIVACY_LEVEL' => 'PUBLIC_TO_EVERYONE',
 
-    // ---- X / Twitter (OAuth 2.0 + PKCE, X API v2) -------------------------
-    'TWITTER_CLIENT_ID'     => '',
-    'TWITTER_CLIENT_SECRET' => '',
-    'TWITTER_REDIRECT_URI'  => '',
-    'TWITTER_EXTRA_SCOPES'  => '',   // space separated extra scopes
-    // X write endpoints still expect OAuth 1.0a user context. Without these the
-    // account connects and reads fine but publishing reports a setup error.
-    'TWITTER_CONSUMER_KEY'     => '',
-    'TWITTER_CONSUMER_SECRET'  => '',
-    'TWITTER_ACCESS_TOKEN'     => '',
-    'TWITTER_ACCESS_TOKEN_SECRET' => '',
-
     'MAX_UPLOAD_SIZE'  => '10485760',
     'ALLOWED_IMAGE_TYPES' => 'jpg,jpeg,png,gif,webp',
     'ALLOWED_VIDEO_TYPES' => 'mp4,mov,avi,webm',

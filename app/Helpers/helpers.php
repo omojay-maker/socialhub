@@ -334,61 +334,6 @@ function http_query_params(string $queryString): array {
     return $out;
 }
 
-/**
- * Builds the OAuth 1.0a signature base string (RFC 5849 section 3.4.1).
- *
- * Exposed separately because it is the part that is easy to get subtly wrong
- * and the only thing worth eyeballing when a write call returns 401 in
- * production.
- */
-function oauth1_base_string(string $method, string $url, array $params): string {
-    ksort($params);
-    $pairs = [];
-    foreach ($params as $k => $v) {
-        $pairs[] = rawurlencode((string)$k) . '=' . rawurlencode((string)$v);
-    }
-    // The query string is not part of the base URI; its parameters belong in
-    // $params instead, otherwise the signature disagrees with the request.
-    $bareUrl = preg_replace('#\?.*#', '', $url) ?: $url;
-    return strtoupper($method) . '&' . rawurlencode($bareUrl) . '&' . rawurlencode(implode('&', $pairs));
-}
-
-function oauth1_header(
-    string $method,
-    string $url,
-    array $params,
-    string $consumerKey,
-    string $consumerSecret,
-    string $token,
-    string $tokenSecret,
-    ?string $nonce = null,
-    ?int $timestamp = null
-): string {
-    // The nonce and timestamp are injectable so the signature can be checked
-    // against the published Twitter/X reference vector in tests/.
-    $oauth = [
-        'oauth_consumer_key'     => $consumerKey,
-        'oauth_nonce'            => $nonce ?? bin2hex(random_bytes(16)),
-        'oauth_signature_method' => 'HMAC-SHA1',
-        'oauth_timestamp'        => (string)($timestamp ?? time()),
-        'oauth_token'            => $token,
-        'oauth_version'          => '1.0',
-    ];
-
-    $all = array_merge($params, $oauth);
-    ksort($all);
-
-    $key   = rawurlencode($consumerSecret) . '&' . rawurlencode($tokenSecret);
-    $oauth['oauth_signature'] = base64_encode(
-        hash_hmac('sha1', oauth1_base_string($method, $url, $all), $key, true)
-    );
-    ksort($oauth);
-
-    $out = [];
-    foreach ($oauth as $k => $v) $out[] = rawurlencode($k) . '="' . rawurlencode((string)$v) . '"';
-    return 'OAuth ' . implode(', ', $out);
-}
-
 function http_parse_headers(string $raw): array {
     $out = [];
     foreach (preg_split('/\r?\n/', $raw) ?: [] as $line) {

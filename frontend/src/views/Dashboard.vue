@@ -8,7 +8,7 @@ import { Chart, registerables } from 'chart.js'
 import {
   Users, Heart, Send, Eye, ArrowUp, Plus, Moon, Sun,
   Pencil, CalendarDays, Layers, ChevronRight, Bell,
-  Instagram, Linkedin, Twitter, Music2, MessageSquare, Share2
+  Instagram, Linkedin, Music2, MessageSquare, Share2
 } from 'lucide-vue-next'
 
 Chart.register(...registerables)
@@ -48,22 +48,20 @@ const published = computed(() => Number(summary.value.posts) || 0)
 function platClsOf(name = '') {
   const s = name.toLowerCase()
   if (s.includes('insta')) return 'ig'
-  if (s.includes('link')) return 'li'
   if (s.includes('tikt')) return 'tt'
-  return 'x'
+  return 'li'
 }
 function platBarOf(name = '') {
   const s = name.toLowerCase()
   if (s.includes('insta')) return 'purple'
-  if (s.includes('link')) return 'cyan'
   if (s.includes('tikt')) return 'pink'
-  return 'blue'
+  return 'cyan'
 }
 const maxFollowers = computed(() => Math.max(1, ...channels.value.map(c => c.followers)))
 const channels = computed(() => {
   if (byPlatform.value.length) {
     return byPlatform.value.slice(0, 4).map(p => ({
-      name: /twitter/i.test(p.name) ? 'X' : p.name,
+      name: p.name,
       followers: Number(p.followers || p.reach || 0),
       growth: `+${(Number(p.eng_rate) || 1.5).toFixed(1)}%`,
       cls: platClsOf(p.name),
@@ -76,7 +74,6 @@ const channels = computed(() => {
 
 const filteredPosts = computed(() => {
   if (postFilter.value === 'All') return recent.value
-  if (postFilter.value === 'X') return recent.value.filter(p => /twit|\bx\b/i.test(p.platforms || ''))
   return recent.value.filter(p => (p.platforms || '').toLowerCase().includes(postFilter.value.toLowerCase()))
 })
 
@@ -85,9 +82,8 @@ const connectedCount = computed(() => accounts.value.length)
 function platOf(p) {
   const s = (p.platforms || '').toLowerCase()
   if (s.includes('insta')) return 'Instagram'
-  if (s.includes('link')) return 'LinkedIn'
   if (s.includes('tikt')) return 'TikTok'
-  if (s.includes('twit') || /(^|,\s*)x(\s|,|$)/.test(s)) return 'X'
+  if (s.includes('link')) return 'LinkedIn'
   return (p.platforms || 'Instagram').split(',')[0].trim() || 'Instagram'
 }
 function hashtags(text = '') {
@@ -368,8 +364,7 @@ function goCreate() { router.push('/create') }
                   <span class="plat-ico" :class="c.cls">
                     <Instagram v-if="c.cls==='ig'" style="width:17px;height:17px" />
                     <Music2 v-else-if="c.cls==='tt'" style="width:17px;height:17px" />
-                    <Linkedin v-else-if="c.cls==='li'" style="width:17px;height:17px" />
-                    <Twitter v-else style="width:17px;height:17px" />
+                    <Linkedin v-else style="width:17px;height:17px" />
                   </span>
                   <div class="grow">
                     <div class="row-between">
@@ -391,7 +386,7 @@ function goCreate() { router.push('/create') }
             <div class="row g2">
               <h3>Recent Posts</h3>
               <div class="post-tabs">
-                <button v-for="t in ['All','Instagram','TikTok','LinkedIn','X']" :key="t" :class="{ on: postFilter === t }" @click="postFilter = t">{{ t }}</button>
+                <button v-for="t in ['All','Instagram','TikTok','LinkedIn']" :key="t" :class="{ on: postFilter === t }" @click="postFilter = t">{{ t }}</button>
               </div>
             </div>
             <router-link to="/posts" class="link">View all</router-link>
@@ -400,7 +395,6 @@ function goCreate() { router.push('/create') }
             <div v-for="p in filteredPosts.slice(0, 5)" :key="p.id" class="feed-item">
               <div class="feed-thumb">
                 <template v-if="platOf(p)==='TikTok'">♪</template>
-                <template v-else-if="platOf(p)==='X'">𝕏</template>
                 <template v-else-if="platOf(p)==='LinkedIn'">◈</template>
                 <template v-else>INK</template>
               </div>
@@ -408,8 +402,7 @@ function goCreate() { router.push('/create') }
                 <div class="feed-meta">
                   <Instagram v-if="platOf(p)==='Instagram'" style="width:14px;height:14px;color:#fb7185" />
                   <Music2 v-else-if="platOf(p)==='TikTok'" style="width:14px;height:14px;color:#fe2c55" />
-                  <Linkedin v-else-if="platOf(p)==='LinkedIn'" style="width:14px;height:14px;color:#38b6ff" />
-                  <Twitter v-else style="width:14px;height:14px;color:#e7e9ea" />
+                  <Linkedin v-else style="width:14px;height:14px;color:#38b6ff" />
                   {{ platOf(p) }}
                 </div>
                 <div class="feed-text">{{ plainText(p.content) }}</div>
@@ -456,11 +449,10 @@ function goCreate() { router.push('/create') }
               <span class="plat-ico" :class="a.cls || platClsOf(a.platform_name||a.name)">
                 <Instagram v-if="(a.cls||platClsOf(a.platform_name||a.name||''))==='ig'" style="width:16px;height:16px" />
                 <Music2 v-else-if="(a.cls||platClsOf(a.platform_name||a.name||''))==='tt'" style="width:16px;height:16px" />
-                <Linkedin v-else-if="(a.cls||platClsOf(a.platform_name||a.name||''))==='li'" style="width:16px;height:16px" />
-                <Twitter v-else style="width:16px;height:16px" />
+                <Linkedin v-else style="width:16px;height:16px" />
               </span>
               <div>
-                <div class="channel-name" style="font-size:13px">{{ /twitter/i.test(a.platform_name||a.name||'') ? 'X' : (a.platform_name || a.name) }}</div>
+                <div class="channel-name" style="font-size:13px">{{ a.platform_name || a.name }}</div>
                 <div class="acct-handle">{{ a.username || '@1techlink' }}</div>
               </div>
               <span class="status-txt"><span class="status-dot" />Active</span>

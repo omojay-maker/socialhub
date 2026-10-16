@@ -43,7 +43,7 @@ if ($dbAvailable) {
 
 $runner = new TestRunner();
 
-$suites = ['oauth1_signature', 'pkce', 'http', 'environment', 'platforms', 'media'];
+$suites = ['http', 'environment', 'platforms', 'media'];
 foreach ($suites as $suite) {
     $path = $root . "/tests/suite/$suite.php";
     if (!is_file($path)) {

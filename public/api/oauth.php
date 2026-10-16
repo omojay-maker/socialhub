@@ -2,7 +2,7 @@
 /**
  * OAuth entry points.
  *
- *   GET  ?action=start&platform=facebook|instagram|linkedin|tiktok|twitter
+ *   GET  ?action=start&platform=instagram|linkedin|tiktok
  *         -> 302 to the platform authorization dialog
  *   GET  ?action=callback&platform=...&code=...&state=...
  *         -> exchanges the code, stores encrypted credentials, 302 back to the SPA
@@ -42,7 +42,7 @@ function platform_id_for(string $slug): int {
  * redirect URI outside of native-app localhost testing, and the platform needs
  * to reach our signed media URLs over TLS. So live OAuth requires HTTPS.
  */
-const HTTPS_ONLY_PLATFORMS = ['facebook', 'instagram', 'linkedin', 'tiktok', 'twitter'];
+const HTTPS_ONLY_PLATFORMS = ['instagram', 'linkedin', 'tiktok'];
 
 env_send_security_headers();
 json_no_store();

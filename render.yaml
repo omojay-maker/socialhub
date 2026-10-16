@@ -40,17 +40,15 @@ services:
       - key: APP_URL
         value: https://socialhub.onrender.com
       - key: PUBLIC_MEDIA_BASE
-        value: https://socialhub.onrender.com
+        value: https://socialhub-9o29.onrender.com
       - key: TERMS_URL
-        value: https://socialhub.onrender.com/terms.html
+        value: https://socialhub-9o29.onrender.com/terms.html
       - key: PRIVACY_URL
-        value: https://socialhub.onrender.com/privacy.html
+        value: https://socialhub-9o29.onrender.com/privacy.html
       # OAuth credentials — paste from each developer portal when going live.
       # Instagram (or Meta app): INSTAGRAM_CLIENT_ID / INSTAGRAM_CLIENT_SECRET
       # LinkedIn: LINKEDIN_CLIENT_ID / LINKEDIN_CLIENT_SECRET
       # TikTok: TIKTOK_CLIENT_ID / TIKTOK_CLIENT_SECRET
-      # X: TWITTER_CLIENT_ID / TWITTER_CLIENT_SECRET (+ OAuth 1.0a user tokens
-      #    TWITTER_CONSUMER_KEY/SECRET + TWITTER_ACCESS_TOKEN/SECRET for posting)
       - key: INSTAGRAM_CLIENT_ID
         sync: false
       - key: INSTAGRAM_CLIENT_SECRET
@@ -62,10 +60,6 @@ services:
       - key: TIKTOK_CLIENT_ID
         sync: false
       - key: TIKTOK_CLIENT_SECRET
-        sync: false
-      - key: TWITTER_CLIENT_ID
-        sync: false
-      - key: TWITTER_CLIENT_SECRET
         sync: false
 
   # Releases scheduled posts every 5 minutes (same as the local cron line).

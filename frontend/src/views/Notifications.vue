@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import client, { getCsrf } from '../api/client'
-import { CheckCheck, Bell, Check, MessageSquare, AtSign, UserPlus, Heart, Send, TriangleAlert, Instagram, Linkedin, Twitter, Music2 } from 'lucide-vue-next'
+import { CheckCheck, Bell, Check, MessageSquare, AtSign, UserPlus, Heart, Send, TriangleAlert, Instagram, Linkedin, Music2 } from 'lucide-vue-next'
 
 const notifications = ref([])
 const platform = ref('')
@@ -42,9 +42,8 @@ function typeIcon(t = '') {
 }
 function platIcon(name = '') {
   if (/insta/i.test(name)) return Instagram
-  if (/link/i.test(name)) return Linkedin
   if (/tikt/i.test(name)) return Music2
-  return Twitter
+  return Linkedin
 }
 function when(s) {
   if (!s) return ''
@@ -81,7 +80,6 @@ onMounted(load)
           <option value="instagram">Instagram</option>
           <option value="tiktok">TikTok</option>
           <option value="linkedin">LinkedIn</option>
-          <option value="twitter">X</option>
         </select>
         <select v-model="type" style="width:160px" @change="load">
           <option value="">Every kind</option>

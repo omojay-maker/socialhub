@@ -6,7 +6,6 @@ require_once __DIR__ . '/Providers/FacebookProvider.php';
 require_once __DIR__ . '/Providers/InstagramProvider.php';
 require_once __DIR__ . '/Providers/LinkedInProvider.php';
 require_once __DIR__ . '/Providers/TikTokProvider.php';
-require_once __DIR__ . '/Providers/XProvider.php';
 
 class ProviderFactory {
     /**
@@ -14,7 +13,7 @@ class ProviderFactory {
      * this as the allow-list so adding a provider never means hunting down
      * hard-coded platform arrays across the codebase.
      */
-    const SUPPORTED = ['instagram', 'linkedin', 'tiktok', 'twitter'];
+    const SUPPORTED = ['instagram', 'linkedin', 'tiktok'];
 
     /** True when the app is allowed to talk to live platform APIs. */
     public static function liveMode(): bool {
@@ -48,7 +47,6 @@ class ProviderFactory {
             'instagram'=> new InstagramProvider(),
             'linkedin' => new LinkedInProvider(),
             'tiktok'   => new TikTokProvider(),
-            'twitter', 'x' => new XProvider(),
             default    => null,
         };
     }
@@ -88,7 +86,6 @@ class ProviderFactory {
             'instagram' => 'Requires a public HTTPS URL and an Instagram Business or Creator account linked to a Facebook Page.',
             'linkedin'  => 'A LinkedIn app with "Sign In with LinkedIn". Add r_organization_social to post as a company page.',
             'tiktok'    => 'A TikTok for Developers app with the Content Posting API approved. Unaudited apps publish privately.',
-            'twitter'   => 'An X developer app. offline.access is required for refresh tokens; publishing needs an OAuth 1.0a user token.',
             default     => null,
         };
     }

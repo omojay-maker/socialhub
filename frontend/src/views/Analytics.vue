@@ -3,7 +3,7 @@ import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import client from '../api/client'
 import { useTheme } from '../composables/useTheme'
 import { Chart, registerables } from 'chart.js'
-import { TrendingUp, Eye, Users, Heart, ArrowUp, Instagram, Linkedin, Twitter, Music2 } from 'lucide-vue-next'
+import { TrendingUp, Eye, Users, Heart, ArrowUp, Instagram, Linkedin, Music2 } from 'lucide-vue-next'
 
 Chart.register(...registerables)
 Chart.defaults.font.family = "'Inter',system-ui,sans-serif"
@@ -128,9 +128,8 @@ function draw() {
 
 function platCls(name = '') {
   if (/insta/i.test(name)) return 'ig'
-  if (/link/i.test(name)) return 'li'
   if (/tikt/i.test(name)) return 'tt'
-  return 'x'
+  return 'li'
 }
 </script>
 
@@ -207,8 +206,7 @@ function platCls(name = '') {
               <span class="plat-ico" :class="platCls(p.name)">
                 <Instagram v-if="platCls(p.name)==='ig'" style="width:16px;height:16px" />
                 <Music2 v-else-if="platCls(p.name)==='tt'" style="width:16px;height:16px" />
-                <Linkedin v-else-if="platCls(p.name)==='li'" style="width:16px;height:16px" />
-                <Twitter v-else style="width:16px;height:16px" />
+                <Linkedin v-else style="width:16px;height:16px" />
               </span>
               <div class="grow">
                 <div class="row-between">

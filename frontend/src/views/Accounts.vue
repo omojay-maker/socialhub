@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import client, { BASE, getCsrf } from '../api/client'
 import { useAuthStore } from '../stores/auth'
-import { RefreshCw, Unlink, ShieldCheck, Link2, Info, CheckCircle2, ExternalLink, Instagram, Linkedin, Twitter, Music2 } from 'lucide-vue-next'
+import { RefreshCw, Unlink, ShieldCheck, Link2, Info, CheckCircle2, ExternalLink, Instagram, Linkedin, Music2 } from 'lucide-vue-next'
 
 const auth = useAuthStore()
 const accounts = ref([])
@@ -47,20 +47,17 @@ function connectReal(p) {
 function platCls(slug = '') {
   slug = (slug || '').toLowerCase()
   if (slug.includes('insta')) return 'ig'
-  if (slug.includes('link')) return 'li'
   if (slug.includes('tikt')) return 'tt'
-  return 'x'
+  return 'li'
 }
 function platIcon(slug = '') {
   slug = (slug || '').toLowerCase()
   if (slug.includes('insta')) return Instagram
-  if (slug.includes('link')) return Linkedin
   if (slug.includes('tikt')) return Music2
-  return Twitter
+  return Linkedin
 }
 function displayName(a) {
-  const n = a.platform_name || a.name || ''
-  return /twitter/i.test(n) ? 'X' : n
+  return a.platform_name || a.name || ''
 }
 
 async function connect() {

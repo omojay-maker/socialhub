@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import client, { getCsrf } from '../api/client'
-import { Search, Trash2, Eye, RotateCcw, X, FileText, Instagram, Linkedin, Twitter, Music2, Plus } from 'lucide-vue-next'
+import { Search, Trash2, Eye, RotateCcw, X, FileText, Instagram, Linkedin, Music2, Plus } from 'lucide-vue-next'
 
 const route = useRoute()
 const posts = ref([])
@@ -57,16 +57,14 @@ async function retry(postId, slug) {
 function platIcon(s = '') {
   s = s.toLowerCase()
   if (s.includes('insta')) return Instagram
-  if (s.includes('link')) return Linkedin
   if (s.includes('tikt')) return Music2
-  return Twitter
+  return Linkedin
 }
 function platCls(s = '') {
   s = s.toLowerCase()
   if (s.includes('insta')) return 'ig'
-  if (s.includes('link')) return 'li'
   if (s.includes('tikt')) return 'tt'
-  return 'x'
+  return 'li'
 }
 function shortDate(s) {
   if (!s) return '—'
@@ -136,7 +134,6 @@ watch([q, status], () => {
               <option value="instagram">Instagram</option>
               <option value="tiktok">TikTok</option>
               <option value="linkedin">LinkedIn</option>
-              <option value="twitter">X</option>
             </select>
             <button
               v-if="q || status || platform"

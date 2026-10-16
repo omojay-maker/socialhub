@@ -21,8 +21,7 @@ INSERT INTO social_platforms (slug, name, icon, color, is_active) VALUES
 ('facebook',  'Facebook',     'facebook',  '#1877F2', FALSE),
 ('instagram', 'Instagram',    'instagram', '#E4405F', TRUE),
 ('linkedin',  'LinkedIn',     'linkedin',  '#0A66C2', TRUE),
-('tiktok',    'TikTok',       'tiktok',    '#FE2C55', TRUE),
-('twitter',   'X',            'twitter',   '#e7e9ea', TRUE)
+('tiktok',    'TikTok',       'tiktok',    '#FE2C55', TRUE)
 ON CONFLICT (slug) DO UPDATE SET
   name=EXCLUDED.name, icon=EXCLUDED.icon, color=EXCLUDED.color, is_active=EXCLUDED.is_active;
 
@@ -42,7 +41,6 @@ FROM (
   SELECT (SELECT id FROM social_platforms WHERE slug='instagram') AS platform_id, '1TechLink' AS account_name, '@1techlink.official' AS username, 'business' AS account_type,  8920 AS followers, 540 AS following,  278 AS posts_count, 6.12 AS engagement_rate
   UNION ALL SELECT (SELECT id FROM social_platforms WHERE slug='linkedin'), '1TechLink Company', '1techlink',           'company',   5420, 180,  156, 3.90
   UNION ALL SELECT (SELECT id FROM social_platforms WHERE slug='tiktok'), '1TechLink',         '@1techlink',          'creator',  22400,  90,   61, 8.40
-  UNION ALL SELECT (SELECT id FROM social_platforms WHERE slug='twitter'), '1TechLink',         '@1techlink',          'user',      6350, 410, 1280, 2.75
 ) v
 WHERE NOT EXISTS (
   SELECT 1 FROM social_accounts a
@@ -79,9 +77,7 @@ SELECT v.post_id, v.platform_id FROM (
   SELECT (SELECT id FROM posts WHERE content LIKE 'At 1TechLink, we build technology solutions%' ORDER BY id LIMIT 1) AS post_id, (SELECT id FROM social_platforms WHERE slug='instagram') AS platform_id
   UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'At 1TechLink, we build technology solutions%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='linkedin')
   UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'At 1TechLink, we build technology solutions%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='tiktok')
-  UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'At 1TechLink, we build technology solutions%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='twitter')
   UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'Excited to announce our new product line%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='instagram')
-  UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'Excited to announce our new product line%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='twitter')
   UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'Technology That Moves Businesses Forward%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='linkedin')
   UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'Technology That Moves Businesses Forward%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='tiktok')
   UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'Our team delivered another successful project%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='instagram')
@@ -96,9 +92,7 @@ FROM (
   SELECT (SELECT id FROM posts WHERE content LIKE 'At 1TechLink, we build technology solutions%' ORDER BY id LIMIT 1) AS post_id, (SELECT id FROM social_platforms WHERE slug='instagram') AS platform_id, (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='instagram') AND username='@1techlink.official') AS account_id, 'published' AS status, 'ig_1001' AS external_post_id, (NOW() - INTERVAL '2 days') AS published_at, NULL::TEXT AS error_message
   UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'At 1TechLink, we build technology solutions%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='linkedin'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='linkedin') AND username='1techlink'), 'failed',   NULL,       NULL, 'LinkedIn publishing failed: rate limit exceeded (demo).'
   UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'At 1TechLink, we build technology solutions%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='tiktok'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='tiktok') AND username='@1techlink'), 'published','tt_1001', (NOW() - INTERVAL '2 days'), NULL
-  UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'At 1TechLink, we build technology solutions%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='twitter'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='twitter') AND username='@1techlink'), 'published','tw_1001', (NOW() - INTERVAL '2 days'), NULL
   UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'Excited to announce our new product line%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='instagram'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='instagram') AND username='@1techlink.official'), 'published','ig_1002', (NOW() - INTERVAL '1 day'), NULL
-  UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'Excited to announce our new product line%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='twitter'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='twitter') AND username='@1techlink'), 'published','tw_1002', (NOW() - INTERVAL '1 day'), NULL
   UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'Technology That Moves Businesses Forward%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='linkedin'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='linkedin') AND username='1techlink'), 'scheduled',NULL,NULL, NULL
   UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'Technology That Moves Businesses Forward%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='tiktok'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='tiktok') AND username='@1techlink'), 'scheduled',NULL,NULL, NULL
   UNION ALL SELECT (SELECT id FROM posts WHERE content LIKE 'Our team delivered another successful project%' ORDER BY id LIMIT 1), (SELECT id FROM social_platforms WHERE slug='instagram'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='instagram') AND username='@1techlink.official'), 'published','ig_1005', (NOW() - INTERVAL '5 hours'), NULL
@@ -125,7 +119,6 @@ FROM (
   UNION ALL SELECT (SELECT id FROM social_platforms WHERE slug='linkedin'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='linkedin') AND username='1techlink'), 'follower', 'New follower',            'TechCorp started following you', TRUE
   UNION ALL SELECT (SELECT id FROM social_platforms WHERE slug='instagram'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='instagram') AND username='@1techlink.official'), 'message',  'New message',             'You have a new DM from @client_xyz', FALSE
   UNION ALL SELECT (SELECT id FROM social_platforms WHERE slug='tiktok'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='tiktok') AND username='@1techlink'), 'view',     'Video milestone',         'Your TikTok passed 10K views', FALSE
-  UNION ALL SELECT (SELECT id FROM social_platforms WHERE slug='twitter'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='twitter') AND username='@1techlink'), 'alert',    'Post limit warning',      'You are close to the X monthly post cap', FALSE
 ) v
 WHERE NOT EXISTS (
   SELECT 1 FROM notifications n
@@ -144,8 +137,6 @@ FROM (
   UNION ALL SELECT (SELECT id FROM social_platforms WHERE slug='linkedin'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='linkedin') AND username='1techlink'), (CURRENT_DATE - INTERVAL '1 day'), 5375, 30, 152, 18, 10, 3900,  6100, 3.65
   UNION ALL SELECT (SELECT id FROM social_platforms WHERE slug='tiktok'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='tiktok') AND username='@1techlink'), CURRENT_DATE,22400, 310, 980, 74, 52, 41000, 58000, 8.40
   UNION ALL SELECT (SELECT id FROM social_platforms WHERE slug='tiktok'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='tiktok') AND username='@1techlink'), (CURRENT_DATE - INTERVAL '1 day'),22090, 260, 910, 69, 48, 38000, 54000, 8.11
-  UNION ALL SELECT (SELECT id FROM social_platforms WHERE slug='twitter'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='twitter') AND username='@1techlink'), CURRENT_DATE, 6350,  40,  95, 12, 22,  2100, 4800, 2.75
-  UNION ALL SELECT (SELECT id FROM social_platforms WHERE slug='twitter'), (SELECT id FROM social_accounts WHERE platform_id=(SELECT id FROM social_platforms WHERE slug='twitter') AND username='@1techlink'), (CURRENT_DATE - INTERVAL '1 day'), 6310,  35,  88, 11, 19, 1950, 4500, 2.60
 ) v
 ON CONFLICT (platform_id, "date") DO UPDATE SET
   account_id=EXCLUDED.account_id, followers=EXCLUDED.followers, follower_growth=EXCLUDED.follower_growth,
