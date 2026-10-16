@@ -470,7 +470,10 @@ class XProvider extends AbstractSocialProvider {
             $detail = $b['detail'] ?? $b['title'] ?? null;
             $msg = is_string($detail) ? $detail : ($b['error_description'] ?? $b['error'] ?? null);
             if (is_array($msg)) $msg = describe_api_error($msg);
-            if ($msg) return (string)$msg;
+            if ($msg) {
+                $status = (int)($res['status'] ?? 0);
+                return $status ? "$msg (HTTP $status)" : (string)$msg;
+            }
         }
         return $res['error'] ?? $fallback;
     }
